@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentInfoToHrIsMapper">
+
+    <insert id="insertTmAgentInfoToHrIs">
+        insert into tmagentinfotohris
+        select sysdate as 同步时间,
+        ' ' as 离职性质,
+        ' ' as 离职原因代码,
+        ' ' as 是否建议重新聘用,
+        null as 离职日期,
+        'A' as 员工状态,
+        coalesce((
+        select t.GP_PAYGROUP
+        from PS_C_GP_PAYGROUP_V t
+        where replace(t.DESCR,' ','') = replace(c.PayCategory,' ','')
+        ),' ') as 报薪类别编号,
+        a.agentnum as 员工编号,
+        coalesce(a.surname,' ') as 姓,
+        coalesce(a.name,' ') as 名,
+        coalesce(c.shortname,' ') as 英文名,
+        coalesce(c.establishmentCode,' ') as 编制代码,
+        coalesce((
+        select distinct t.LOCATION
+        from PS_C_LOCATION_VW t
+        where replace(t.DESCR,' ','') = replace(c.Workplace,' ','')
+        ),' ') as 职场编号,
+        coalesce((
+        select distinct t.ESTABID
+        from PS_C_ESTAB_VW t
+        where t.DESCR = c.Affiliation
+        ),' ') as 所属机构编号,
+        ' ' as 成本中心编号,
+        coalesce(c.SecFunctionGroup,' ') as 二级职能组,
+        '不适用' as 职衔,
+        (
+        select distinct JOBCODE
+        from PS_C_JBCD_VW t
+        where t.DESCR = (case
+        when (select wc23.codealias
+        from ldcode wc23
+        where wc23.codetype = 'f_tmagentgrade'
+        and wc23.code = b.agentgrade) = 'TMR'
+        and c.postsign in('实习生') then 'TMR实习生无职级'
+        when (select wc23.codealias
+        from ldcode wc23
+        where wc23.codetype = 'f_tmagentgrade'
+        and wc23.code = b.agentgrade) = 'TMR' then 'TMR无职级'
+        when (select wc23.codealias
+        from ldcode wc23
+        where wc23.codetype = 'f_tmagentgrade'
+        and wc23.code = b.agentgrade) = 'TMS' then 'TMS无职级'
+        when b.agentgrade in('ACCM','ACCM(P)') then 'TMS无职级'
+        else ' ' end)
+        ) as 职级编号,
+        coalesce(c.b11 ,a.employdate) as 入职日期,
+        coalesce((
+        select distinct t.DEPTID2
+        from PS_C_SMRT_DEPT_VW t
+        where replace(t.DESCR2,' ','') = replace(c.SecCnDepartment,' ','')),
+        (select distinct t1.DEPTID
+        from PS_C_SMRT_DEPT_VW t1
+        where replace(t1.DESCR,' ','') = replace(c.fircndepartment,' ','')
+        ),' ') as 部门编号,
+        coalesce(c.CnPosition,' ') as 职务名称中文,
+        coalesce(b.AGENTGRADE,' ') as 职务名称英文,
+        coalesce(a.mobile,' ') as 本人手机号码,
+        coalesce(a.idno,' ') as 证件号码,
+        coalesce(c.Bank,' ') as 开户银行,
+        coalesce(c.cardNum,' ') as 卡号,
+        coalesce((
+        select distinct t.CONTRIB_AREA_CHN
+        from PS_C_INS_CITY_VW t
+        where replace(t.DESCR,' ','') = replace(c.SocialSecurityPayCity,' ','')
+        ),' ') as 社保缴纳城市,
+        coalesce((
+        select t.code
+        from ldcode t
+        where t.codetype = 'tm_sspayaccount'
+        and t.codename = c.SocialSecurityPayAccount
+        ),' ') as 社保缴纳账户,
+        coalesce(a.rgtaddress,' ') as 户籍市,
+        (case
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '本地农村' then 'LFARMER'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '本地城镇' then 'LPRESIDENT'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '外地农村' then 'NFARMER'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '外地城镇' then 'NRESIDENT'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '外籍' then 'OTHER'
+        else ' ' end) as 户籍类型,
+        coalesce(decode(
+        (select t.CodeAlias
+        from ldcode t
+        where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code), 'TMR', c.b1, 'TMS', c.b2, 'TBC'
+        ), 'TBC') as 直属上级员工编号,
+        coalesce((
+        select w24.surname
+        from laagent w24
+        where w24.agentnum = decode(
+        (select t.CodeAlias
+        from ldcode t
+        where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code), 'TMR', c.b1, 'TMS', c.b2, 'TBC')
+        ),' ') as 直属上级姓,
+        coalesce((
+        select w24.name
+        from laagent w24
+        where w24.agentnum = decode(
+        (select t.CodeAlias
+        from ldcode t
+        where
+        t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code), 'TMR', c.b1, 'TMS', c.b2, 'TBC')
+        ),' ') as 直属上级名,
+        c.companyStartDate as 司龄起算日期,
+        c.contracttype as 合同类型,
+        coalesce(a.sex,' ') as 性别,
+        a.birthday as 生日,
+        decode(a.birthday,null,0,(select floor(MONTHS_BETWEEN(sysdate, a.birthday) / 12)from dual)) as 年龄,
+        coalesce(a.marriage,' ') as 婚姻状况,
+        'CHN' as 国籍,
+        coalesce((
+        select distinct t.ETHNIC_GRP_CD
+        from PS_ETHNIC_GRP_TBL t
+        where t.DESCRSHORT = (select wd16.codename
+        from ldcode wd16
+        where wd16.codetype = 'nationality'
+        and wd16.code = a.nationality)
+        ),' ') as 民族,
+        coalesce((
+        select distinct t.political_sta_chn
+        from PS_C_POLITICAL_VW t
+        where t.descr = (select wd19.codename
+        from ldcode wd19
+        where wd19.codetype = 'polityvisage'
+        and wd19.code = a.polityvisage)
+        ),' ') as 政治面貌,
+        coalesce(c.companyPhone,' ') as 公司固定电话,
+        coalesce(c.firmMail,' ') as 公司邮箱,
+        coalesce(a.email,' ') as 个人邮箱,
+        coalesce(c.emergencyContactName,' ') as 紧急联系人姓名,
+        coalesce(c.emergencyContactPhone,' ') as 紧急联系人手机,
+        coalesce(a.phone,' ') as 紧急联系人固定电话,
+        (case when c.OnlyChildCard='有' then 'Y' when c.OnlyChildCard='无' then 'N' else ' ' end) as 独生子女证,
+        coalesce(c.Child1name,' ') as 子女姓名1,
+        decode(c.Child1Sex,'男','M','女','F',' ') as 子女性别1,
+        c.Child1Birthday as 子女出生日期1,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child1Birthday) / 12)from dual),0) as 子女年龄1,
+        coalesce(c.Child2name,' ') as 子女姓名2,
+        decode(c.Child2Sex,'男','M','女','F',' ') as 子女性别2,
+        c.Child2Birthday as 子女出生日期2,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child2Birthday) / 12)from dual),0) as 子女年龄2,
+        coalesce(c.Child3name,' ') as 子女姓名3,
+        decode(c.Child3Sex,'男','M','女','F',' ') as 子女性别3,
+        c.Child3Birthday as 子女出生日期3,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child3Birthday) / 12)from dual),0) as 子女年龄3,
+        (case
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '大专' then 'F'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '高职' then 'E'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '本科' then 'G'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '中专' then 'C'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '初中' then 'B'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '高中' then 'D'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '博士后'then 'J'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '初中以下' then 'A'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '硕士研究生' then 'H'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '博士研究生' then 'I'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '其他'then 'K'
+        else ' ' end) as 最高学历,
+        (case
+        when c.HighestDegree = '学士学位' then '01'
+        when c.HighestDegree = '硕士学位' then '02'
+        when c.HighestDegree = '博士学位' then '03'
+        when c.HighestDegree = '无' then '04'
+        else ' ' end) as 最高学位,
+        coalesce(a.speciality,' ') as 专业,
+        c.graduationDate as 毕业时间,
+        c.firstJobDate as 第一次参加工作时间,
+        c.joinThePartyDate as 入党时间,
+        c.isFormalPartyMemberDate as 预备党员转正时间,
+        c.leavePartyDate as 退党时间 ,
+        coalesce((select code from ldcode t where t.codetype = 'tm_liveway' and t.codename= c.liveWay),' ') as 居住方式,
+        coalesce(substr(c.IDCardAddress,0,25),' ') as 身份证详细住址,
+        coalesce(substr(a.homeaddress,0,25),' ') as 目前住所详细地址,
+        coalesce((
+        select code
+        from ldcode t
+        where t.codetype = 'tm_englishlevel'
+        and t.codename = c.EnglishLevel
+        ),' ') as 英语等级,
+        coalesce((
+        select wd21.codename
+        from ldcode wd21
+        where wd21.codetype = 'posttitle'
+        and wd21.code = a.posttitle
+        ),' ') as 职称,
+        coalesce(c.skillLevel,' ') as 职业技能等级,
+        coalesce(a.oldcom,' ') as 上一家工作单位,
+        coalesce(trunc(c.application3),0) as 入职前本职位从业时长年,
+        c.ProbationEndDate as 试用期到期日,
+        c.contractEndDate as 合同到期日,
+        coalesce(c.weChat,' ') as 微信,
+        coalesce(to_number(REGEXP_REPLACE(c.QQ,'[^0-9]','')),0) as QQ,
+        coalesce(c.postCnName,' ') as 职位名称中文,
+        coalesce(c.postEnName,' ') as 职位名称英文,
+        ' ' as 保险计划,
+        coalesce(c.HRCost,' ') as HRCost,
+        (case
+        when c.Disabled = '是' then 'Y'
+        when c.Disabled = '否' then 'N'
+        else ' ' end) as 残障人士,
+        'N' as 是否保监会任命,
+        coalesce((
+        select t.C_TM_ID
+        from PS_C_TM_OA_VW t
+        where t.DESCR50 = (select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom)
+        ),' ') as TM项目,
+        coalesce(c.istraninee,' ') as 是否Trainee,
+        coalesce(a.GRADUATESCHOOL,' ') as 毕业院校,
+        ' ' as 本岗位是否重新聘用,
+        ' ' as 公司其他岗位是否重新聘用,
+        (case
+        when c.postsign in (select codename from ldcode l1 where l1.codetype = 'postsigntype') then 'Y'
+        when b.AGENTGRADE in (select codename from ldcode l1 where l1.codetype = 'agentgradetype') then 'Y'
+        else 'N' end) as 是否发放高温津贴,
+        (case
+        when c.Child1Type='01' then 'TWN01'
+        when c.Child1Type='02' then 'VISA'
+        when c.Child1Type='03' then 'PASS'
+        when c.Child1Type='04' then 'NID'
+        else ' ' end) as 子女证件类型1,
+        coalesce(c.Child1No,' ') as 子女证件号码1,
+        (case
+        when c.Child2Type='01' then 'TWN01'
+        when c.Child2Type='02' then 'VISA'
+        when c.Child2Type='03' then 'PASS'
+        when c.Child2Type='04' then 'NID'
+        else ' ' end) as 子女证件类型2,
+        coalesce(c.Child2No,' ') as 子女证件号码2,
+        (case
+        when c.Child3Type='01' then 'TWN01'
+        when c.Child3Type='02' then 'VISA'
+        when c.Child3Type='03' then 'PASS'
+        when c.Child3Type='04' then 'NID'
+        else ' ' end) as 子女证件类型3,
+        coalesce(c.Child3No,' ') as 子女证件号码3,
+        coalesce(c.Child4name,' ') as 子女姓名4,
+        decode(c.Child4Sex,'男','M','女','F',' ') as 子女性别4,
+        c.Child4Birthday as 子女出生日期4,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child4Birthday) / 12)from dual),0) as 子女年龄4,
+        (case
+        when c.Child4Type='01' then 'TWN01'
+        when c.Child4Type='02' then 'VISA'
+        when c.Child4Type='03' then 'PASS'
+        when c.Child4Type='04' then 'NID'
+        else ' ' end) as 子女证件类型4,
+        coalesce(c.Child4No,' ') as 子女证件号码4
+        from laagent a, latree b, laagentinfo c, tmbranchgroup d,agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate = '01'
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and not exists(select 1 from tmTransferAgent t where t.agentnum = a.agentnum )
+        and a.agentgroup = d.agentgroup
+        and (select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype='1'
+        and wc9.managecom=a.managecom) not in ('CGBZJ(GZ)','CGBZJ(SH)','CGBZJ(SY)')
+        and (c.postsign not in('虚拟账号','虚拟人员') or c.postsign is null)
+        and (
+        (select t.CodeAlias
+        from ldcode t
+        where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code) in ('TMR', 'TMS')
+        or b.agentgrade in('ACCM','ACCM(P)')
+        )
+
+        union all
+
+        select sysdate as 同步时间,
+        (CASE
+        when (select codename
+        from ldcode where codetype = 'dimissiontype'
+        and code = e.DIMISSIONTYPE
+        and code in('03','04')) = '主动离职' then 'TER'
+        when (select codename
+        from ldcode where codetype = 'dimissiontype'
+        and code = e.DIMISSIONTYPE
+        and code in('03','04')) = '被动离职' then 'PAR'
+        else ' ' end) as 离职性质,
+        coalesce((
+        select t.ACTION_REASON
+        from PS_C_ACTN_RSN_VW t
+        where t.DESCR = (select wc27.codename
+        from ldcode wc27
+        where wc27.codetype = 'newdepartrsn'
+        and wc27.code = e.dimissionreason)
+        and t.ACTION = (CASE
+        when (select codename
+        from ldcode
+        where codetype = 'dimissiontype'
+        and code = e.DIMISSIONTYPE
+        and code in ('03', '04')) = '主动离职' then 'TER'
+        when (select codename
+        from ldcode
+        where codetype = 'dimissiontype'
+        and code = e.DIMISSIONTYPE
+        and code in ('03', '04')) = '被动离职' then 'PAR'
+        else ' ' end)
+        ),' ') as 离职原因代码,
+        (case when e.AGAINEMPLOY = 'N' then '2' when e.AGAINEMPLOY = 'Y' then '1' else ' ' end) as 是否建议重新聘用,
+        e.dimissiondate as 离职日期,
+        'I' as 员工状态,
+        coalesce((
+        select t.GP_PAYGROUP
+        from PS_C_GP_PAYGROUP_V t
+        where replace(t.DESCR,' ','') = replace(c.PayCategory,' ','')
+        ),' ') as 报薪类别编号,
+        a.agentnum as 员工编号,
+        coalesce(a.surname,' ') as 姓,
+        coalesce(a.name,' ') as 名,
+        coalesce(c.shortname,' ') as 英文名,
+        coalesce(c.establishmentCode,' ') as 编制代码,
+        coalesce((
+        select distinct t.LOCATION
+        from PS_C_LOCATION_VW t
+        where replace(t.DESCR,' ','') = replace(c.Workplace,' ','')
+        ),' ') as 职场编号,
+        coalesce((
+        select distinct t.ESTABID
+        from PS_C_ESTAB_VW t
+        where t.DESCR = c.Affiliation
+        ),' ') as 所属机构编号,
+        ' ' as 成本中心编号,
+        coalesce(c.SecFunctionGroup,' ') as 二级职能组,
+        '不适用' as 职衔,
+        (select distinct JOBCODE
+        from PS_C_JBCD_VW t
+        where t.DESCR = (case
+        when (select wc23.codealias
+        from ldcode wc23
+        where wc23.codetype = 'f_tmagentgrade'
+        and wc23.code = b.agentgrade) = 'TMR'
+        and c.postsign in ('实习生') then 'TMR实习生无职级'
+        when (select wc23.codealias
+        from ldcode wc23
+        where wc23.codetype = 'f_tmagentgrade'
+        and wc23.code = b.agentgrade) = 'TMR' then 'TMR无职级'
+        when (select wc23.codealias
+        from ldcode wc23
+        where wc23.codetype = 'f_tmagentgrade'
+        and wc23.code = b.agentgrade) = 'TMS' then 'TMS无职级'
+        when b.agentgrade in('ACCM','ACCM(P)') then 'TMS无职级'
+        else ' ' end)) as 职级编号,
+        coalesce(c.b11 ,a.employdate) as 入职日期,
+        coalesce(
+        (select distinct t.DEPTID2
+        from PS_C_SMRT_DEPT_VW t
+        where replace(t.DESCR2,' ','') = replace(c.SecCnDepartment,' ','')),
+        (select distinct t1.DEPTID
+        from PS_C_SMRT_DEPT_VW t1
+        where replace(t1.DESCR,' ','') = replace(c.fircndepartment,' ','')
+        ),' ') as 部门编号,
+        coalesce(c.CnPosition,' ') as 职务名称中文,
+        coalesce(b.AGENTGRADE,' ') as 职务名称英文,
+        coalesce(a.mobile,' ') as 本人手机号码,
+        coalesce(a.idno,' ') as 证件号码,
+        coalesce(c.Bank,' ') as 开户银行,
+        coalesce(c.cardNum,' ') as 卡号,
+        coalesce((
+        select distinct t.CONTRIB_AREA_CHN
+        from PS_C_INS_CITY_VW t
+        where t.DESCR = c.SocialSecurityPayCity
+        ),' ') as 社保缴纳城市,
+        coalesce((
+        select t.code
+        from ldcode t
+        where t.codetype = 'tm_sspayaccount'
+        and t.codename = c.SocialSecurityPayAccount
+        ),' ') as 社保缴纳账户,
+        coalesce(a.rgtaddress,' ') as 户籍市,
+        (case
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '本地农村' then 'LFARMER'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '本地城镇' then 'LPRESIDENT'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '外地农村' then 'NFARMER'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '外地城镇' then 'NRESIDENT'
+        when (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = c.Householdtype) = '外籍' then 'OTHER'
+        else ' ' end) as 户籍类型,
+        coalesce(decode(
+        (select t.CodeAlias
+        from ldcode t
+        where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code), 'TMR', c.b1, 'TMS', c.b2, 'TBC'
+        ), 'TBC') as 直属上级员工编号,
+        coalesce((
+        select w24.surname
+        from laagent w24
+        where w24.agentnum = decode(
+        (select t.CodeAlias
+        from ldcode t
+        where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code), 'TMR', c.b1, 'TMS', c.b2, 'TBC')
+        ),' ') as 直属上级姓,
+        coalesce((
+        select w24.name
+        from laagent w24
+        where w24.agentnum = decode(
+        (select t.CodeAlias
+        from ldcode t where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code), 'TMR', c.b1, 'TMS', c.b2, 'TBC')
+        ),' ') as 直属上级名,
+        c.companyStartDate as 司龄起算日期,
+        coalesce((
+        select distinct t.CNT_TEMPLATE_ID
+        from PS_CNT_TEMPL_VW t
+        where t.DESCR = (select wc3.codename
+        from ldcode wc3
+        where wc3.codetype = 'contracttype'
+        and wc3.code = c.contracttype)
+        ),' ') as 合同类型,
+        coalesce(a.sex,' ') as 性别,
+        a.birthday as 生日,
+        decode(a.birthday,null,0,(select floor(MONTHS_BETWEEN(sysdate, a.birthday) / 12)from dual)) as 年龄,
+        coalesce(a.marriage,' ') as 婚姻状况,
+        'CHN' as 国籍,
+        coalesce((
+        select distinct t.ETHNIC_GRP_CD
+        from PS_ETHNIC_GRP_TBL t
+        where t.DESCRSHORT = (select wd16.codename
+        from ldcode wd16
+        where wd16.codetype = 'nationality'
+        and wd16.code = a.nationality)
+        ),' ') as 民族,
+        coalesce((
+        select distinct t.political_sta_chn
+        from PS_C_POLITICAL_VW t
+        where t.descr = (select wd19.codename
+        from ldcode wd19
+        where wd19.codetype = 'polityvisage'
+        and wd19.code = a.polityvisage)
+        ),' ') as 政治面貌,
+        coalesce(c.companyPhone,' ') as 公司固定电话,
+        coalesce(c.firmMail,' ') as 公司邮箱,
+        coalesce(a.email,' ') as 个人邮箱,
+        coalesce(c.emergencyContactName,' ') as 紧急联系人姓名,
+        coalesce(c.emergencyContactPhone,' ') as 紧急联系人手机,
+        coalesce(a.phone,' ') as 紧急联系人固定电话,
+        (case
+        when c.OnlyChildCard = '有' then 'Y'
+        when c.OnlyChildCard = '无' then 'N'
+        else ' ' end) as 独生子女证,
+        coalesce(c.Child1name,' ') as 子女姓名1,
+        decode(c.Child1Sex,'男','M','女','F',' ') as 子女性别1,
+        c.Child1Birthday as 子女出生日期1,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child1Birthday) / 12)from dual),0) as 子女年龄1,
+        coalesce(c.Child2name,' ') as 子女姓名2,
+        decode(c.Child2Sex,'男','M','女','F',' ') as 子女性别2,
+        c.Child2Birthday as 子女出生日期2,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child2Birthday) / 12)from dual),0) as 子女年龄2,
+        coalesce(c.Child3name,' ') as 子女姓名3,
+        decode(c.Child3Sex,'男','M','女','F',' ') as 子女性别3,
+        c.Child3Birthday as 子女出生日期3,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child3Birthday) / 12)from dual),0) as 子女年龄3,
+        (case
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '大专' then 'F'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '高职' then 'E'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '本科' then 'G'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '中专' then 'C'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '初中' then 'B'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '高中' then 'D'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '博士后' then 'J'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '初中以下' then 'A'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '硕士研究生' then 'H'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '博士研究生' then 'I'
+        when (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) = '其他' then 'K'
+        else ' ' end) as 最高学历,
+        (case
+        when c.HighestDegree = '学士学位' then '01'
+        when c.HighestDegree = '硕士学位' then '02'
+        when c.HighestDegree = '博士学位' then '03'
+        when c.HighestDegree = '无' then '04'
+        else ' ' end) as 最高学位,
+        coalesce(a.speciality,' ') as 专业,
+        c.graduationDate as 毕业时间,
+        c.firstJobDate as 第一次参加工作时间,
+        c.joinThePartyDate as 入党时间,
+        c.isFormalPartyMemberDate as 预备党员转正时间,
+        c.leavePartyDate as 退党时间,
+        coalesce((select code from ldcode t where t.codetype = 'tm_liveway' and t.codename= c.liveWay),' ') as 居住方式,
+        coalesce(substr(c.IDCardAddress,0,25),' ') as 身份证详细住址,
+        coalesce(substr(a.homeaddress,0,25),' ') as 目前住所详细地址,
+        coalesce((
+        select code
+        from ldcode t
+        where t.codetype = 'tm_englishlevel'
+        and t.codename = c.EnglishLevel
+        ),' ') as 英语等级,
+        coalesce((
+        select wd21.codename
+        from ldcode wd21
+        where wd21.codetype = 'posttitle'
+        and wd21.code = a.posttitle
+        ),' ') as 职称,
+        coalesce(c.skillLevel,' ') as 职业技能等级,
+        coalesce(a.oldcom,' ') as 上一家工作单位,
+        coalesce(trunc(c.application3),0) as 入职前本职位从业时长年,
+        c.ProbationEndDate as 试用期到期日,
+        c.contractEndDate as 合同到期日,
+        coalesce(c.weChat,' ') as 微信,
+        coalesce(to_number(REGEXP_REPLACE(c.QQ,'[^0-9]','')),0) as QQ,
+        coalesce(c.postCnName,' ') as 职位名称中文,
+        coalesce(c.postEnName,' ') as 职位名称英文,
+        ' ' as 保险计划,
+        coalesce(c.HRCost,' ') as HRCost,
+        (case
+        when c.Disabled = '是' then 'Y'
+        when c.Disabled = '否' then 'N'
+        else ' ' end) as 残障人士,
+        'N' as 是否保监会任命,
+        coalesce((
+        select t.C_TM_ID
+        from PS_C_TM_OA_VW t
+        where t.DESCR50 = (select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom)
+        ),' ') as TM项目,
+        coalesce(c.istraninee,' ') as 是否Trainee,
+        coalesce(a.GRADUATESCHOOL,' ') as 毕业院校,
+        (case
+        when e.POSTAGAINEMPLOY = 'N' then '2'
+        when e.POSTAGAINEMPLOY = 'Y' then '1'
+        else ' ' end) as 本岗位是否重新聘用,
+        (case
+        when e.OTHERPOSTAGAINEMPLOY = 'N' then '2'
+        when e.OTHERPOSTAGAINEMPLOY = 'Y' then '1'
+        else ' ' end) as 公司其他岗位是否重新聘用,
+        (case
+        when c.postsign in (select codename
+        from ldcode l1
+        where l1.codetype = 'postsigntype') then 'Y'
+        when b.AGENTGRADE in (select codename
+        from ldcode l1
+        where l1.codetype = 'agentgradetype') then 'Y'
+        else 'N' end) as 是否发放高温津贴,
+        (case
+        when c.Child1Type = '01' then 'TWN01'
+        when c.Child1Type = '02' then 'VISA'
+        when c.Child1Type = '03' then 'PASS'
+        when c.Child1Type = '04' then 'NID'
+        else ' ' end) as 子女证件类型1,
+        coalesce(c.Child1No,' ') as 子女证件号码1,
+        (case
+        when c.Child2Type = '01' then 'TWN01'
+        when c.Child2Type = '02' then 'VISA'
+        when c.Child2Type = '03' then 'PASS'
+        when c.Child2Type = '04' then 'NID'
+        else ' ' end) as 子女证件类型2,
+        coalesce(c.Child2No,' ') as 子女证件号码2,
+        (case
+        when c.Child3Type = '01' then 'TWN01'
+        when c.Child3Type = '02' then 'VISA'
+        when c.Child3Type = '03' then 'PASS'
+        when c.Child3Type = '04' then 'NID'
+        else ' ' end) as 子女证件类型3,
+        coalesce(c.Child3No,' ') as 子女证件号码3,
+        coalesce(c.Child4name,' ') as 子女姓名4,
+        decode(c.Child4Sex,'男','M','女','F',' ') as 子女性别4,
+        c.Child4Birthday as 子女出生日期4,
+        coalesce((select floor(MONTHS_BETWEEN(sysdate,c.Child4Birthday) / 12)from dual),0) as 子女年龄4,
+        (case
+        when c.Child4Type = '01' then 'TWN01'
+        when c.Child4Type = '02' then 'VISA'
+        when c.Child4Type = '03' then 'PASS'
+        when c.Child4Type = '04' then 'NID'
+        else ' ' end) as 子女证件类型4,
+        coalesce(c.Child4No,' ') as 子女证件号码4
+        from laagent a,
+        latree b,
+        laagentinfo c,
+        tmbranchgroup d,
+        tmdimission e,
+        agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate in ('03')
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and e.branchtype = '1'
+        and not exists (select 1 from tmTransferAgent t where t.agentnum = a.agentnum )
+        and a.agentcode = e.agentcode
+        and (select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom) not in ('CGBZJ(GZ)','CGBZJ(SH)','CGBZJ(SY)')
+        and (c.postsign not in ('虚拟账号','虚拟人员') or c.postsign is null)
+        and to_char(e.dimissiondate,'YYYY') = to_char(sysdate,'YYYY')
+        and (
+        (select t.CodeAlias
+        from ldcode t
+        where t.codetype = 'f_tmagentgrade'
+        and b.agentgrade = t.code) in ('TMR', 'TMS')
+        or b.agentgrade in ('ACCM','ACCM(P)')
+        )
+    </insert>
+
+    <insert id="insertPS_C_EMPL_SYNC_ALL">
+        insert into PS_C_EMPL_SYNC_ALL
+        select distinct SYNCDTTM,
+        a.DIMISSIONTYPE,
+        a.DIMISSIONREASON,
+        a.AGAINEMPLOY,
+        a.OTHERPOSTAGAINEMPLOY,
+        a.POSTAGAINEMPLOY,
+        a.DIMISSIONDATE,
+        a.AGENTSTATE,
+        a.PAYCATEGORY,
+        a.AGENTNUM,
+        nvl(nvl(unistr(REPLACE(f.surname, '\u', '\')), a.surname), ' '),
+        nvl(nvl(unistr(REPLACE(f.name, '\u', '\')), a.name),' '),
+        a.SHORTNAME,
+        a.ESTABLISHMENTCODE,
+        a.WORKPLACE,
+        a.AFFILIATION,
+        a.COSTCENTER,
+        a.SECFUNCTIONGROUP,
+        a.TITLE,
+        a.AGENTGRADE,
+        a.EMPLOYDATE,
+        a.DEPTID,
+        a.CNPOSITION,
+        a.ENPOSITION,
+        a.MOBILE,
+        a.IDNO,
+        a.BANK,
+        a.CARDNUM,
+        a.SOCIALSECURITYPAYCITY,
+        a.SOCIALSECURITYPAYACCOUNT,
+        a.RGTADDRESS,
+        a.HOUSEHOLDTYPE,
+        a.BRANCHNAME,
+        a.UPSURNAME,
+        a.UPNAME,
+        a.COMPANYSTARTDATE,
+        a.CONTRACTTYPE,
+        a.SEX,
+        a.BIRTHDAY,
+        a.AGE,
+        a.MARRIAGE,
+        a.COUNTRY,
+        a.NATIONALITY,
+        a.POLITYVISAGE,
+        a.COMPANYPHONE,
+        a.FIRMMAIL,
+        a.EMAIL,
+        a.EMERGENCYCONTACTNAME,
+        a.EMERGENCYCONTACTPHONE,
+        a.PHONE,
+        a.ONLYCHILDCARD,
+        nvl(nvl(unistr(REPLACE(f.b1, '\u', '\')), a.CHILD1NAME), ' '),
+        a.CHILD1SEX,
+        a.CHILD1BIRTHDAY,
+        a.AGE1,
+        a.Child1Type,
+        a.Child1No,
+        nvl(nvl(unistr(REPLACE(f.b2, '\u', '\')), a.CHILD2NAME), ' '),
+        a.CHILD2SEX,
+        a.CHILD2BIRTHDAY,
+        a.AGE2,
+        a.Child2Type,
+        a.Child2No,
+        nvl(nvl(unistr(REPLACE(f.b3, '\u', '\')), a.CHILD3NAME), ' '),
+        a.CHILD3SEX,
+        a.CHILD3BIRTHDAY,
+        a.AGE3,
+        a.Child3Type,
+        a.Child3No,
+        nvl(nvl(unistr(REPLACE(f.b4, '\u', '\')), a.CHILD4NAME), ' '),
+        a.CHILD4SEX,
+        a.CHILD4BIRTHDAY,
+        a.AGE4,
+        a.Child4Type,
+        a.Child4No,
+        a.DEGREE,
+        a.HIGHESTDEGREE,
+        a.SPECIALITY,
+        a.GRADUATIONDATE,
+        a.FIRSTJOBDATE,
+        a.JOINTHEPARTYDATE,
+        a.ISFORMALPARTYMEMBERDATE,
+        a.LEAVEPARTYDATE,
+        a.LIVEWAY,
+        a.IDCARDADDRESS,
+        a.HOMEADDRESS,
+        a.ENGLISHLEVEL,
+        a.POSTTITLE,
+        a.SKILLLEVEL,
+        a.OLDCOM,
+        a.APPLICATION3,
+        a.PROBATIONENDDATE,
+        a.CONTRACTENDDATE,
+        a.WECHAT,
+        a.QQ,
+        a.POSTCNNAME,
+        a.POSTENNAME,
+        a.INSURANCEPLAN,
+        a.HRCOST,
+        a.DISABLED,
+        a.YESNO_DROPDOWN,
+        a.SPONSOR,
+        a.ISTRANINEE,
+        a.GRADUATESCHOOL,
+        a.FLAG
+        from tmagentinfotohris a, agentunicode f
+        where a.agentnum = f.agentnum(+)
+        and a.SYNCDTTM = (select max(t.SYNCDTTM) from tmagentinfotohris t)
+    </insert>
+
+    <delete id="deleteTmAgentInfoToHrIs">
+        delete tmagentinfotohris a
+        where to_char(a.SYNCDTTM, 'YYYYMMDD') &lt; to_char(sysdate-30, 'YYYYMMDD')
+    </delete>
+
+</mapper>

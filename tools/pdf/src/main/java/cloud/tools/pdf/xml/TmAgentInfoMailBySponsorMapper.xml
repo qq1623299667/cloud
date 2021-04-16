@@ -1,0 +1,707 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentInfoMailBySponsorMapper">
+
+    <sql id="agentSql">
+        select tt.* from (
+        select t.* from (
+        <include refid="activeAgentSql"/>
+        union all
+        <include refid="unActiveAgentSql"/>
+        union all
+        <include refid="hiRsAgentSql"/>
+        ) t
+        where 1 = 1
+        order by t.员工编号, t.系统标识
+        ) tt
+    </sql>
+
+    <sql id="activeAgentSql">
+        select
+        a.agentnum as 员工编号,
+        c.agentsn as 员工工号,
+        nvl(unistr(REPLACE(f.surname||f.name, '\u', '\')),a.surname||a.name) as 中文名,
+        c.shortname as 英文名,
+        '在职' as 员工状态,
+        coalesce(c.APPLICATION2,to_char(a.employdate,'YYYYMM')) as 入职月份,
+        to_char(a.employdate, 'YYYY-MM-DD') as 入职日期,
+        to_char(a.INDUEFORMDATE, 'YYYY-MM-DD') as 转正日期,
+        c.trainNum as 培训批次,
+        to_char(a.takeupdate, 'YYYY-MM-DD') as 上线日期,
+        to_char(c.projectChangeOnlineDate, 'YYYY-MM-DD') as 项目变更上线日期,
+        (
+        select wc2.codename
+        from ldcode wc2
+        where wc2.codetype = 'f_isrehare'
+        and wc2.code = c.isrehare
+        ) as 是否Rehire,
+        to_char(c.trainstartdate, 'YYYY-MM-DD') as 培训起始时间,
+        to_char(c.trainenddate, 'YYYY-MM-DD') as 培训结束时间,
+        '' as 离职月份,
+        '' as 离职日期,
+        '' as 离职性质,
+        '' as 离职原因,
+        (
+        select wc3.codename
+        from ldcode wc3
+        where wc3.codetype = 'contracttype'
+        and wc3.code = c.contracttype
+        ) as 合同类型,
+        (
+        select wc4.codename
+        from ldcode wc4
+        where wc4.codetype = 'yesno'
+        and wc4.code = c.istraninee
+        ) as 是否Trainee,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'hiretype'
+        and wc5.code = c.hiretype
+        ) as Hire_Type,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'f_recruitcanal'
+        and wc5.code = c.APPLICATION1
+        ) as 招聘渠道,
+        c.b6 as 是否MT,
+        c.b7 as 是否校招,
+        c.b8 as 是否团队引进,
+        (
+        select wc6.codename
+        from ldcode wc6
+        where wc6.codetype = 'channel2'
+        and wc6.code = c.channel
+        ) as Channel,
+        c.postsign as 岗位标识,
+        case
+        when b.agentgrade in ('ACCM','ACCM(P)') and c.istraninee = 'N' then 'TMS Headcount'
+        when b.agentgrade in ('ACCM','ACCM(P)') and c.istraninee = 'Y' then 'TMS Trainee'
+        else (select wc7.codename
+        from ldcode wc7
+        where wc7.codetype = 'gradetype'
+        and wc7.code=c.gradetype)
+        end as 岗位类别 ,
+        decode(b.agentgrade,
+        'ACCM','TMS',
+        'ACCM(P)','TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )) as 岗位 ,
+        c. postEnName as 职务名称英文,
+        (
+        select wd13.codename
+        from ldcode wd13
+        where wd13.codetype = 'yesno'
+        and wd13.code = c.isprotect
+        ) as 是否享受保护政策,
+        (
+        select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 城市,
+        (
+        select t.ReportsRegion
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 区域,
+        (
+        select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom
+        ) as 项目,
+        NVL(
+        (select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b1)
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b1)
+        ) as 管理主管英文名,
+        c.b1 as 管理主管员工编号,
+        NVL(
+        (select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b2)
+        ), (select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b2)
+        ) as 管理经理英文名,
+        c.b2 as 管理经理员工编号,
+        (case
+        when d.branchlevel = '02' then nvl(
+        (select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = d.branchmanager),
+        'TBC')
+        else ''
+        end) as 计佣主管英文名,
+        decode(d.branchmanager,
+        '','',
+        ((case when d.branchlevel = '02' then nvl((d.branchname),'') else '' end))) as 计佣主管员工编号,
+        (case
+        when d.branchlevel = '02' then nvl(
+        (select w25.shortname
+        from laagentinfo w25, tmbranchgroup we25
+        where we25.branchtype = '1'
+        and w25.agentcode = we25.branchmanager
+        and we25.agentgroup = d.upagentgroup),
+        'TBC')
+        when d.branchlevel = '01' then c.shortname
+        else 'TBC'
+        end) as 计佣经理英文名,
+        (case
+        when d.branchlevel = '02' then nvl(
+        (select wc25.agentnum
+        from laagentinfo w25,
+        tmbranchgroup we25,
+        laagent wc25
+        where wc25.agentcode = w25.agentcode
+        and we25.branchtype = '1'
+        and w25.agentcode = we25.branchmanager
+        and we25.agentgroup = d.upagentgroup), '')
+        when d.branchlevel = '01' then a.agentnum
+        else ''
+        end) as 计佣经理员工编号 ,
+        c.belongCode as 归属Coach,
+        c.tmmgr as 项目经理,
+        c.cityhead as 城市负责人,
+        to_char(c.b5,'YYYY-MM-DD') as 调动生效日期,
+        (
+        select wd10.codename
+        from ldcode wd10
+        where wd10.codetype = 'sex'
+        and wd10.code = a.sex
+        ) as 性别,
+        (
+        select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree
+        ) as 最高学历,
+        a.quafno as 资格证号ALE证,
+        to_char(a.quafstartdate, 'YYYY-MM-DD') as 资格证起始时间,
+        to_char(a.quafenddate, 'YYYY-MM-DD') as 资格证截止时间,
+        a.salno as 执业证证件号码,
+        to_char(a.salstartdate, 'YYYY-MM-DD') as 执业证起始时间,
+        to_char(a.salenddate, 'YYYY-MM-DD') as 执业证截止时间,
+        to_char(c.PracticeOutDate, 'YYYY-MM-DD') as 执业证注销时间,
+        c.agencyName as 所属机构全称,
+        c.SaleChannelType as 销售渠道类型,
+        c.BusinessScope as 业务范围,
+        c.PracticeArea as 执业区域,
+        c.PayCategory as 报薪类别,
+        to_char(a.birthday, 'YYYY-MM-DD') as 生日,
+        to_char(c.TMRtoTMSdate, 'YYYY-MM-DD') as TMR晋升TMS日期,
+        to_char(c.CoachtoTMS1date, 'YYYY-MM-DD') as Coach晋升TMS1日期,
+        to_char(c.b12, 'YYYY-MM-DD') as TMR晋升Coach日期,
+        to_char(c.firstJobDate, 'YYYY-MM-DD') as 第一次参加工作时间,
+        c.banksn as 银行工号,
+        c.Insurersn as 保险工号,
+        c.FWbanksn as 食行天下银行工号,
+        c.yearpaybanksn as 年费银行工号,
+        c.ValueAddedSort as 增值分类,
+        c.DomainAccount as 域帐号,
+        to_char(c.b9, 'YYYY-MM-DD') as 进Coach时间,
+        to_char(c.b10, 'YYYY-MM-DD') as 进大场时间,
+        a.remark as 备注,
+        'SMART' as 系统标识
+        from laagent a, latree b, laagentinfo c, tmbranchgroup d,agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate = '01'
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and not exists(
+        select 1
+        from ldcode t
+        where t.codetype = 'tm_postsign'
+        and c.postsign = t.codename
+        and t.code = 4
+        )
+        and a.agentgroup = d.agentgroup
+        <if test="mailSponsor != null and mailSponsor != ''">
+            and (
+            select wc9.name
+            from tmmanagecom wc9
+            where wc9.branchtype = '1'
+            and wc9.managecom = a.managecom
+            ) in (#{mailSponsor})
+        </if>
+        <if test="scopeType == '2'.toString()">
+            and (
+            select w1.comcode
+            from tmmanagecom w1
+            where w1.branchtype = '1'
+            and w1.managecom = a.managecom
+            ) like '86%'
+        </if>
+    </sql>
+
+    <sql id="unActiveAgentSql">
+        select
+        a.agentnum as 员工编号,
+        c.agentsn as 员工工号,
+        nvl(unistr(REPLACE(f.surname||f.name, '\u', '\')),a.surname||a.name) as 中文名,
+        c.shortname as 英文名,
+        (case
+        a.agentstate when '02' then 'Transfer'
+        when '03' then '离职'
+        when '04' then '其他'
+        end) as 员工状态,
+        coalesce(c.APPLICATION2,to_char(a.employdate,'YYYYMM')) as 入职月份,
+        to_char(a.employdate, 'YYYY-MM-DD') as 入职日期,
+        to_char(a.INDUEFORMDATE, 'YYYY-MM-DD') as 转正日期,
+        c.trainNum as 培训批次,
+        to_char(a.takeupdate, 'YYYY-MM-DD') as 上线日期,
+        to_char(c.projectChangeOnlineDate, 'YYYY-MM-DD') as 项目变更上线日期,
+        (
+        select wc2.codename
+        from ldcode wc2
+        where wc2.codetype = 'f_isrehare'
+        and wc2.code = c.isrehare
+        ) as 是否Rehire,
+        to_char(c.trainstartdate, 'YYYY-MM-DD') as 培训起始时间,
+        to_char(c.trainenddate, 'YYYY-MM-DD') as 培训结束时间,
+        e.dimissionmonth 离职月份,
+        to_char(e.dimissiondate, 'YYYY-MM-DD') as 离职日期,
+        (
+        select codename
+        from ldcode
+        where codetype = 'dimissiontype'
+        and code = e.DIMISSIONTYPE
+        and code in ('03', '04')
+        ) as 离职性质,
+        (
+        select wc27.codename
+        from ldcode wc27
+        where wc27.codetype = 'newdepartrsn'
+        and wc27.code = e.dimissionreason
+        ) as 离职原因,
+        (
+        select wc3.codename
+        from ldcode wc3
+        where wc3.codetype = 'contracttype'
+        and wc3.code = c.contracttype
+        ) as 合同类型,
+        (
+        select wc4.codename
+        from ldcode wc4
+        where wc4.codetype = 'yesno'
+        and wc4.code = c.istraninee
+        ) as 是否Trainee,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'hiretype'
+        and wc5.code = c.hiretype
+        ) as Hire_Type,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'f_recruitcanal'
+        and wc5.code = c.APPLICATION1
+        ) as 招聘渠道,
+        c.b6 as 是否MT,
+        c.b7 as 是否校招,
+        c.b8 as 是否团队引进,
+        (
+        select wc6.codename
+        from ldcode wc6
+        where wc6.codetype = 'channel2'
+        and wc6.code = c.channel
+        ) as Channel,
+        c.postsign as 岗位标识,
+        case
+        when b.agentgrade in ('ACCM','ACCM(P)') and c.istraninee = 'N' then 'TMS Headcount'
+        when b.agentgrade in ('ACCM','ACCM(P)') and c.istraninee = 'Y' then 'TMS Trainee'
+        else (
+        select wc7.codename
+        from ldcode wc7
+        where wc7.codetype = 'gradetype'
+        and wc7.code = c.gradetype
+        ) end as 岗位类别 ,
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code=b.agentgrade
+        )
+        ) as 岗位,
+        c.postEnName as 职位名称英文,
+        (
+        select wd13.codename
+        from ldcode wd13
+        where wd13.codetype = 'yesno'
+        and wd13.code = c.isprotect
+        ) as 是否享受保护政策,
+        (
+        select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 城市,
+        (
+        select t.ReportsRegion
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 区域,
+        (
+        select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom
+        ) as 项目,
+        NVL(
+        (select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b1)
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b1)
+        ) as 管理主管英文名,
+        c.b1 as 管理主管员工编号,
+        NVL(
+        (select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b2)
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b2)
+        ) as 管理经理英文名,
+        c.b2 as 管理经理员工编号,
+        (case
+        when d.branchlevel = '02' then nvl(
+        (select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = d.branchmanager), 'TBC')
+        else ''
+        end) as 计佣主管英文名,
+        decode(d.branchmanager,
+        '','',
+        (
+        (case
+        when d.branchlevel = '02' then nvl((d.branchname),'')
+        else ''
+        end)
+        )) as 计佣主管员工编号,
+        (case
+        when d.branchlevel = '02' then nvl(
+        (select w25.shortname
+        from laagentinfo w25, tmbranchgroup we25
+        where we25.branchtype = '1'
+        and w25.agentcode = we25.branchmanager
+        and we25.agentgroup = d.upagentgroup),
+        'TBC')
+        when d.branchlevel = '01' then c.shortname
+        else 'TBC'
+        end) as 计佣经理英文名,
+        (case
+        when d.branchlevel = '02' then nvl(
+        (select wc25.agentnum
+        from laagentinfo w25,
+        tmbranchgroup we25,
+        laagent wc25
+        where wc25.agentcode = w25.agentcode
+        and we25.branchtype = '1'
+        and w25.agentcode = we25.branchmanager
+        and we25.agentgroup = d.upagentgroup), '')
+        when d.branchlevel = '01' then a.agentnum
+        else ''
+        end) as 计佣经理员工编号,
+        c.belongCode as 归属Coach,
+        c.tmmgr as 项目经理,
+        c.cityhead as 城市负责人,
+        to_char(c.b5,'YYYY-MM-DD') as 调动生效日期,
+        (
+        select wd10.codename
+        from ldcode wd10
+        where wd10.codetype = 'sex'
+        and wd10.code = a.sex
+        ) as 性别,
+        (
+        select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree
+        ) as 最高学历,
+        a.quafno as 资格证号ALE证,
+        to_char(a.quafstartdate, 'YYYY-MM-DD') as 资格证起始时间,
+        to_char(a.quafenddate, 'YYYY-MM-DD') as 资格证截止时间,
+        a.salno as 执业证证件号码,
+        to_char(a.salstartdate, 'YYYY-MM-DD') as 执业证起始时间,
+        to_char(a.salenddate, 'YYYY-MM-DD') as 执业证截止时间,
+        to_char(c.PracticeOutDate, 'YYYY-MM-DD') as 执业证注销时间,
+        c.agencyName as 所属机构全称,
+        c.SaleChannelType as 销售渠道类型,
+        c.BusinessScope as 业务范围,
+        c.PracticeArea as 执业区域,
+        c.PayCategory as 报薪类别,
+        to_char(a.birthday, 'YYYY-MM-DD') as 生日,
+        to_char(c.TMRtoTMSdate, 'YYYY-MM-DD') as TMR晋升TMS日期,
+        to_char(c.CoachtoTMS1date, 'YYYY-MM-DD') as Coach晋升TMS1日期,
+        to_char(c.b12, 'YYYY-MM-DD') as TMR晋升Coach日期,
+        to_char(c.firstJobDate, 'YYYY-MM-DD') as 第一次参加工作时间,
+        c.banksn as 银行工号,
+        c.Insurersn as 保险工号,
+        c.FWbanksn as 食行天下银行工号,
+        c.yearpaybanksn as 年费银行工号,
+        c.ValueAddedSort as 增值分类,
+        c.DomainAccount as 域帐号,
+        to_char(c.b9, 'YYYY-MM-DD') as 进Coach时间,
+        to_char(c.b10, 'YYYY-MM-DD') as 进大场时间,
+        a.remark as 备注,
+        'SMART' as 系统标识
+        from laagent a,
+        latree b,
+        laagentinfo c,
+        tmbranchgroup d,
+        tmdimission e,
+        agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate in ('02', '03', '04')
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and e.branchtype = '1'
+        and not exists (
+        select 1
+        from ldcode t
+        where t.codetype = 'tm_postsign'
+        and c.postsign = t.codename
+        and t.code = 4
+        )
+        and a.agentcode = e.agentcode
+        <if test="mailSponsor != null and mailSponsor != ''">
+            and (
+            select wc9.name
+            from tmmanagecom wc9
+            where wc9.branchtype = '1'
+            and wc9.managecom = a.managecom
+            ) in (#{mailSponsor})
+        </if>
+        <if test="scopeType == '2'.toString()">
+            and (
+            select w1.comcode
+            from tmmanagecom w1
+            where w1.branchtype = '1'
+            and w1.managecom = a.managecom
+            ) like '86%'
+            and to_char(e.dimissiondate,'YYYY') = to_char(sysdate,'YYYY')
+        </if>
+    </sql>
+
+    <sql id="hiRsAgentSql">
+        select
+        a.AGENTNUM as 员工编号
+        ,'' as 员工工号
+        ,nvl(unistr(REPLACE(a.name, '\u', '\')), a.name) as 中文名
+        ,a.EnName as 英文名
+        ,a.AGENTSTATE as 员工状态
+        ,'' as 入职月份
+        ,to_char(a.EMPLOYDATE, 'YYYY-MM-DD') as 入职日期
+        ,'' as 转正日期
+        ,'' as 培训批次
+        ,'' as 上线日期
+        ,'' as 项目变更变上线日期
+        ,'' as 是否Rehire
+        ,'' as 培训起始时间
+        ,'' as 培训结束时间
+        ,to_char(a.DIMISSIONDATE, 'YYYYMM') as 离职月份
+        ,to_char(a.DIMISSIONDATE, 'YYYY-MM-DD') as 离职日期
+        ,a.DIMISSIONTYPE as 离职性质
+        ,a.DIMISSIONREASON as 离职原因
+        ,a.contracttype as 合同类型
+        ,'' as 是否Trainee
+        ,'' as Hire_Type
+        ,'' as 招聘渠道
+        ,'' as 是否MT
+        ,'' as 是否校招
+        ,'' as 是否团队引进
+        ,'' as Channel
+        ,'' as 岗位标识
+        ,'' as 岗位类别
+        ,'' as 岗位
+        ,a.postEnName as 职位名称英文
+        ,'' as 是否享受保护政策
+        ,(select w1.ReportsCity from tmmanagecom w1 where w1.branchtype = '1' and w1.name = a.sponsor) as 城市
+        ,(select w1.ReportsRegion from tmmanagecom w1 where w1.branchtype = '1' and w1.name = a.sponsor) as 区域
+        ,a.sponsor as 项目
+        ,'' as 管理主管英文名
+        ,'' as 管理主管员工编号
+        ,'' as 管理经理英文名
+        ,'' as 管理经理员工编号
+        ,'' as 计佣主管英文名
+        ,'' as 计佣主管员工编号
+        ,'' as 计佣经理英文名
+        ,'' as 计佣经理员工编号
+        ,'' as 归属Coach
+        ,'' as 项目经理
+        ,'' as 城市负责人
+        ,'' as 调动生效日期
+        ,a.sex as 性别
+        ,a.degree as 最高学历
+        ,'' as 资格证号ALE证
+        ,'' as 资格证起始时间
+        ,'' as 资格证截止时间
+        ,'' as 执业证证件号码
+        ,'' as 执业证起始时间
+        ,'' as 执业证截止时间
+        ,'' as 执业证注销时间
+        ,'' as 所属机构全称
+        ,'' as 销售渠道类型
+        ,'' as 业务范围
+        ,'' as 执业区域
+        ,a.paycategory as 报薪类别
+        ,to_char(a.birthday,'YYYY-MM-DD') as 生日
+        ,'' as TMR晋升TMS日期
+        ,'' as Coach晋升TMS1日期
+        ,'' as TMR晋升Coach日期
+        ,'' as 第一次参加工作时间
+        ,'' as 银行工号
+        ,'' as 保险工号
+        ,'' as 食行天下银行工号
+        ,'' as 年费银行工号
+        ,'' as 增值分类
+        ,'' as 域帐号
+        ,'' as 进Coach时间
+        ,'' as 进大场时间
+        ,'' as 备注
+        ,'HRIS' as 系统标识
+        from agentinfo_hris a
+        where 1 = 1
+        and not exists (
+        select 1 from laagent x
+        where a.agentnum = x.agentnum
+        and x.agentstate &lt;> '02'
+        and x.branchtype = '1'
+        )
+        <if test="mailSponsor != null and mailSponsor != ''">
+            and a.sponsor in (#{mailSponsor})
+        </if>
+        <if test="scopeType == '2'.toString()">
+            and (
+            select w1.comcode
+            from tmmanagecom w1
+            where w1.branchtype = '1'
+            and w1.name=a.sponsor
+            ) like '86%'
+        </if>
+    </sql>
+
+    <sql id="agentTraceSql">
+        select
+        nvl((select w2.username from lduser w2 where w2.usercode = a.operator), a.operator) as 操作人,
+        a.modifydate as 操作日期,
+        a.changedate as 变更生效日期,
+        (select b.agentnum from laagent b where b.agentcode = a.agentcode) as 员工编号,
+        (
+        select b.surname || b.name
+        from laagent b
+        where b.agentcode = a.agentcode
+        ) as 员工姓名,
+        (
+        select x1.codename
+        from ldcode x1
+        where x1.codetype = 'tmagentchangetype'
+        and x1.code = a.tracetype
+        ) as 变更类型,
+        (
+        select x2.shortname
+        from tmmanagecom x2
+        where x2.managecom = a.oldmanagecom
+        ) as 原项目,
+        (
+        select x3.shortname
+        from tmmanagecom x3
+        where x3.managecom = a.newmanagecom
+        ) as 新项目,
+        a.oldtmrcode as 原TMS团队名称,
+        a.newtmrcode as 新TMS团队名称,
+        a.oldccmcode as 原CCM团队名称,
+        a.newccmcode as 新CCM团队名称,
+        a.oldagentgrade as 原职级,
+        a.newagentgrade as 新职级 ,
+        a.wageflag as 是否正确轨迹
+        from tmagentchangetrace a, laagentinfo c
+        where 1 = 1
+        and not exists (
+        select 1
+        from ldcode t
+        where t.codetype = 'tm_postsign'
+        and c.postsign = t.codename
+        and t.code = 4
+        )
+        and a.agentcode = c.agentcode
+        <if test="mailSponsor != null and mailSponsor != ''">
+            and (
+            select wc9.shortname
+            from tmmanagecom wc9
+            where wc9.comgrade = '03'
+            and wc9.managecom = a.newmanagecom
+            ) in (#{mailSponsor})
+        </if>
+    </sql>
+
+    <select id="selectMailRule" resultType="com.cignacmb.smart.job.common.tm.entity.MailRule">
+        select
+        mailtitle AS mailtitle,
+        mail_city AS mailCity,
+        mail_sponsor AS mailSponsor,
+        send_mail_type AS sendMailType,
+        scope_type AS scopeType
+        from mail_rule
+    </select>
+
+    <select id="countAgentInfo" resultType="java.lang.Integer">
+        select count(1) from (
+        <include refid="agentSql"/>
+        )
+    </select>
+
+    <select id="countAgentTrace" resultType="java.lang.Integer">
+        select count(1) from (
+        <include refid="agentTraceSql"/>
+        )
+    </select>
+
+    <select id="selectAgentInfo" resultType="java.util.Map">
+        <include refid="agentSql"/>
+    </select>
+
+    <select id="selectAgentTrace" resultType="java.util.Map">
+        <include refid="agentTraceSql"/>
+    </select>
+
+</mapper>

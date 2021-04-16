@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: redis-redistemplate
+  redis:
+    host: 127.0.0.1
+    database: 5
+    password:
+    port: 6379
+#    timeout: 10s
+#    lettuce.pool.max-active: 2
+#    jedis.pool.max-idle: 1
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:10000/eureka/

@@ -1,0 +1,1916 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAssessCalMapper">
+
+    <select id="getTmAssesSureMonth" resultType="java.lang.String">
+        select basic.GetAddMonth(a.codealias,1) from ldcode a where a.codetype = 'tm_AssesSureMonth' and a.code = 'maxSureMonth'
+    </select>
+
+    <select id="getCountByMonth" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from tmassesslog a where a.assessmonth = #{calMonth,jdbcType=VARCHAR} and a.state = '00'
+    </select>
+
+    <select id="getActualCountByMonth" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from tmassessactual a where a.mor = #{calMonth,jdbcType=VARCHAR}
+    </select>
+
+    <select id="countByManagecom" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from tmassessresult a where a.assessmonth = #{calMonth,jdbcType=VARCHAR} and a.managecom = #{managecom,jdbcType=VARCHAR}
+    </select>
+
+    <select id="getAgentcCountByMonth" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from tmassessagentc a where rownum = 1 and a.bakmonth = #{calMonth,jdbcType=VARCHAR}
+    </select>
+
+    <delete id="deleteDatas" parameterType="java.lang.String">
+        delete from tmassesslog a where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+    </delete>
+
+    <insert id="insertLog" parameterType="java.lang.String">
+        insert into tmassesslog (ASSESSMONTH, MANAGECOM,comlevel, ASSESSDATE, STARTTIME,ENDTIME, STATE, OPERATOR, MAKEDATE, MAKETIME, MODIFYDATE, MODIFYTIME)
+                values (#{calMonth,jdbcType=VARCHAR},#{managecom,jdbcType=VARCHAR},#{comLevel},basic.CurrentDate-1,basic.CurrentTime,'','00',#{operator,jdbcType=VARCHAR},basic.CurrentDate,basic.CurrentTime,basic.CurrentDate,basic.CurrentTime)
+    </insert>
+
+    <delete id="deleteResultDatas" parameterType="java.lang.String">
+        delete from tmassessresult a where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+    </delete>
+
+    <update id="updateLog" parameterType="java.lang.String">
+        update tmassesslog a set a.state = #{state,jdbcType=VARCHAR}
+                ,a.endtime = basic.CurrentTime
+                ,a.modifydate = basic.CurrentDate
+                ,a.modifytime = basic.CurrentTime
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR} and a.managecom = #{managecom,jdbcType=VARCHAR}
+    </update>
+
+    <select id="getManagecomList" resultType="java.lang.String">
+        select a.managecom as managecom
+                from tmmanagecom a where  1=1  and not exists (select 1 from ldcode ld where ld.codetype='tm_assessmanagecom'
+                and ld.code = a.managecom) and  a.comgrade = '03'
+    </select>
+
+    <insert id="dealBaseAgentInfo" parameterType="java.lang.String">
+        insert into tmassessresult
+                (assesssn,
+                ASSESSMONTH,
+                AGENTNUM,
+                AGENTCODE,
+                CHNAME,
+                MANAGECOM,
+                GRADELEVEL,
+                AGENTGRADE,
+                AGENTTYPE,
+                ASSESSSTARTMONTH,
+                ASSESSENDMONTH,
+                TRAILENDMONTH,
+                TRAILPOSTENDMONTH,
+                TRAILPOSTENDMONTH_ACTUAL,
+                ASSESSANP,
+                PASSRATE,
+                WRITTENWARNING,
+                LASTQUARTERMAJORCASECNT,
+                ORALWARNING,
+                TAKEUPRATE,
+                SALESNUMBER,
+                TEAMMANPOWER,
+                DIRECTORMANPOWER,
+                LOSSRATE,
+                ISRECRUITMENTFLAG,
+                ISTHREEPHASESFLAG,
+                ISSPECIALFLAG,
+                ISGRADEADJUSTFLAG,
+                ISASSESSFLAG,
+                CSVDATE,
+                RESULTTYPE,
+                CALRESULT,
+                CALAGENTGRADE,
+                SUGGESTAGENTGRADE,
+                ENDRESULTTYPE,
+                ENDRESULT,
+                ENDAGENTGRADE,
+                OPERATOR,
+                MAKEDATE,
+                MAKETIME,
+                MODIFYDATE,
+                MODIFYTIME,
+                employdate,
+                INDUEFORMDATE,
+                TRANSMANAGECOMDATE,
+                LASTGRADECHANGEDATE,
+                ISMAJORCASECNTDOWN,
+                ISYEARSPECIALFLAG,
+                TMRTOtMSDATE)
+                select to_char(createmaxno('TMASSESSCAL', 'SN'), 'FM0000000000'),
+                a.bakmonth,
+                a.agentnum,
+                a.agentcode,
+                a.chname,
+                a.managecom,
+                a.gradelevel,
+                a.agentgrade,
+                a.agenttype,
+                a.assessstartmonth,
+                a.assessendmonth,
+                a.trailendmonth,
+                a.trailpostendmonth,
+                a.trailpostendmonth_actual,
+                null as ASSESSANP,
+                null as PASSRATE,
+                null as WRITTENWARNING,
+                null as LASTQUARTERMAJORCASECNT,
+                null as ORALWARNING,
+                null as TAKEUPRATE,
+                null as SALESNUMBER,
+                null as TEAMMANPOWER,
+                null as DIRECTORMANPOWER,
+                null as LOSSRATE,
+                a.iscomrecruitmentflag,
+                NVL(a.threephasesflag, 'N'),
+                'N' as ISSPECIALFLAG,
+                'N' as ISGRADEADJUSTFLAG,
+                'Y' as ISASSESSFLAG,
+                a.assesscaldate,
+                null as RESULTTYPE,
+                null as CALRESULT,
+                null as CALAGENTGRADE,
+                null as SUGGESTAGENTGRADE,
+                null as ENDRESULTTYPE,
+                null as ENDRESULT,
+                null as ENDAGENTGRADE,
+                #{operator,jdbcType=VARCHAR},
+                basic.CurrentDate,
+                basic.CurrentTime,
+                basic.CurrentDate,
+                basic.CurrentTime,
+                a.employdate,
+                INDUEFORMDATE,
+                TRANSMANAGECOMDATE,
+                LASTGRADECHANGEDATE,
+                'N' as ISMAJORCASECNTDOWN,
+                'N' as ISYEARSPECIALFLAG,
+                a.TMRTOtMSDATE as TMRTOtMSDATE
+                from tmassessagentc a
+                where a.bakmonth = #{calMonth,jdbcType=VARCHAR}
+    </insert>
+
+    <update id="updateTmrpSalesNumber">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.salesnumberkeepgapforecast <![CDATA[>=]]>  0 then
+                0
+                else
+                -1
+                end) as salesnumber
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agentgrade = 'TMR1(P)'
+                and a.agenttype = '01') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.salesnumber = t.salesnumber
+    </update>
+
+    <update id="updateTmrpANP">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.assessanpkeepgapforecast<![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as assessanp,
+                (case
+                when c.passratekeepgap<![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as passrate,
+                (case
+                when c.takeupratekeepgap<![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as takeuprate,
+                (case
+                when c.writtenwarningkeepgap * -1<![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as writtenwarning,
+                c.lastquartermajorcasecnt,
+                c.majorcasecnt
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.assessanp           = t.assessanp,
+                x.passrate                = t.passrate,
+                x.takeuprate              = t.takeuprate,
+                x.writtenwarning          = t.writtenwarning,
+                x.lastquartermajorcasecnt = t.lastquartermajorcasecnt,
+                x.majorcasecnt            = t.majorcasecnt
+    </update>
+
+    <update id="updateTmrpCalResultTMR1P">
+        update tmassessresult a
+                set a.calresult = least(greatest(a.salesnumber, a.assessanp),
+                a.passrate,
+                a.takeuprate,
+                a.writtenwarning)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.agentgrade = 'TMR1(P)'
+    </update>
+
+    <update id="updateTmrpCalResultNotTMR1P">
+        update tmassessresult a
+        set a.calresult = least(a.assessanp,
+        a.passrate,
+        a.takeuprate,
+        a.writtenwarning)
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.agentgrade <![CDATA[<>]]> 'TMR1(P)'
+    </update>
+
+    <update id="updateTmrpZZ">
+        update tmassessresult a
+                set a.resulttype = 'ZZ'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.calresult = 0
+                and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+    </update>
+
+    <update id="updateTmrpTZ">
+        update tmassessresult a
+        set a.resulttype = 'TZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.calresult = 0
+        and a.assessmonth <![CDATA[<]]>  a.trailendmonth
+    </update>
+
+    <update id="updateTmrpJX">
+        update tmassessresult a
+        set a.resulttype = 'JX'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[<]]> a.trailendmonth
+    </update>
+
+    <update id="updateTmrpLZ">
+        update tmassessresult a
+                set a.resulttype = 'LZ'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.calresult = -1
+                and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+                and a.agentgrade = 'TMR1(P)'
+    </update>
+
+    <update id="updateTmrpJZ">
+        update tmassessresult a
+        set a.resulttype = 'JZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade <![CDATA[<>]]> 'TMR1(P)'
+        and a.assessanp <![CDATA[>=]]> 0
+    </update>
+
+    <update id="updateTmrpJZD">
+        update tmassessresult a
+        set a.resulttype = 'JZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade <![CDATA[<>]]> 'TMR1(P)'
+        and a.assessanp <![CDATA[<]]> 0
+        and a.agentgrade = (select min(b.agentgrade) as agentgrade
+        from tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[>]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and a.agenttype = b.agenttype
+        and b.assessresulttype = '01'
+        group by a.agentcode, a.assessmonth)
+    </update>
+
+    <update id="updateTmrpJZD2">
+        update tmassessresult a
+        set a.resulttype = 'LZ',
+        a.calagentgrade = 'TMR1',
+        A.calresult =
+        (select c.gradeproperty4 * -1
+        from laagentgrade c
+        where c.gradecode = a.agentgrade)
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade <![CDATA[<>]]> 'TMR1(P)'
+        and a.assessanp <![CDATA[<]]> 0
+        and (select min(b.agentgrade) as agentgrade
+        from tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[>]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and a.agenttype = b.agenttype
+        and b.assessresulttype = '01'
+        group by a.agentcode, a.assessmonth) = 'TMR1(P)'
+    </update>
+
+    <update id="updateTmrpJZD3">
+        update tmassessresult a
+        set a.resulttype = 'JZDTemp'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade <![CDATA[<>]]> 'TMR1(P)'
+        and a.assessanp <![CDATA[<]]> 0
+        and a.resulttype is null
+    </update>
+
+    <update id="updateTmrpJZN">
+        merge into tmassessresult x
+        using (select a.agentcode, a.assessmonth, max(b.agentgrade) as agentgrade
+        from tmassessresult a, tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[<=]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and a.agenttype = b.agenttype
+        and a.calresult = -1
+        and b.assessresulttype = '01'
+        and a.assessanp <![CDATA[<]]> 0
+        and a.gradelevel = 'TMR'
+        and a.resulttype = 'JZDTemp'
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        AND a.managecom = #{managecom,jdbcType=VARCHAR}
+        group by a.agentcode, a.assessmonth) t
+        on (t.agentcode = x.agentcode and x.assessmonth = #{calMonth,jdbcType=VARCHAR})
+        when matched then
+        update set x.calagentgrade = t.agentgrade, x.resulttype = 'JZD'
+    </update>
+
+    <update id="updateTmrpJZD4">
+        update tmassessresult a
+                set a.resulttype    = 'LZ',
+                a.calagentgrade = 'TMR1',
+                A.calresult    =
+                (select c.gradeproperty4 * -1
+                from laagentgrade c
+                where c.gradecode = a.agentgrade)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.calresult = -1
+                and a.resulttype = 'JZDTemp'
+    </update>
+
+    <update id="updateTmrpJZNResult">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (select to_number(b.gradeproperty4)
+                from laagentgrade b
+                where b.branchtype = '1'
+                and b.gradecode = a.calagentgrade) -
+                (select to_number(b.gradeproperty4)
+                from laagentgrade b
+                where b.branchtype = '1'
+                and b.gradecode = a.agentgrade) as result
+                from tmassessresult a
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.resulttype = 'JZD') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.calresult = t.result
+    </update>
+
+    <update id="updateTmrpJZNResultLZ">
+        update tmassessresult a
+        set a.resulttype = 'LZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and a.resulttype in ('JZD', 'JZ', 'ZZ', 'TZ')
+        and (select to_number(b.gradeproperty4) + a.calresult
+        from laagentgrade b
+        where b.branchtype = '1'
+        and b.gradecode = a.agentgrade)<![CDATA[<=]]> 0
+    </update>
+
+    <update id="updateTmrpCalGradeJX">
+        update tmassessresult a
+                set a.calagentgrade = a.agentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.resulttype = 'JX'
+    </update>
+
+    <update id="updateTmrpCalGradeLZ">
+        update tmassessresult a
+                set a.calagentgrade = 'TMR1'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and a.resulttype = 'LZ'
+    </update>
+
+    <update id="updateTmrpCalGradeLZ2">
+        merge into tmassessresult x
+                using (select a.assesssn, c.gradecode
+                from laagentgrade c, laagentgrade b, tmassessresult a
+                where c.noti = b.noti
+                and b.gradecode = a.agentgrade
+                and b.branchtype = '1'
+                and c.gradeproperty3 = '1'
+                and b.gradeproperty4 + a.calresult = c.gradeproperty4
+                and a.resulttype in ('ZZ', 'TZ', 'JZ', 'JZD')
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.calagentgrade = t.gradecode
+    </update>
+
+    <update id="dealTmrpMajorCasecntTZ">
+        update tmassessresult a
+                set a.suggestresult = a.calresult,
+                a.suggestagentgrade = a.calagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+    </update>
+
+    <update id="updateTmrpIsThreeY">
+        merge into tmassessresult x
+        using (select a.assesssn, c.gradecode
+        from laagentgrade c, laagentgrade b, tmassessresult a
+        where c.noti = b.noti
+        and b.gradecode = a.agentgrade
+        and b.branchtype = '1'
+        and c.gradeproperty3 = '1'
+        and b.gradeproperty4 = c.gradeproperty4
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.resulttype <![CDATA[<>]]> 'JX'
+        and a.gradelevel = 'TMR'
+        and a.isthreephasesflag = 'Y') t
+        on (x.assesssn = t.assesssn)
+        when matched then
+        update
+        set x.endresulttype = 'ZZ',
+        x.endresult = x.suggestresult,
+        x.endagentgrade = t.gradecode
+    </update>
+
+    <update id="updateTmrpIsThreeN">
+        update tmassessresult a
+                set a.endresulttype = A.resultTYPE,
+                a.endresult     = a.suggestresult,
+                a.endagentgrade = A.suggestagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and A.endresulttype is null
+                and a.endresult is null
+                and a.endagentgrade is null
+    </update>
+
+    <update id="updateTmrpIsAssess">
+        update tmassessresult a
+        set a.isassessflag = 'N',
+        a.resulttype = 'BKH',
+        a.calresult = 0,
+        a.calagentgrade = a.agentgrade,
+        a.suggestresult = 0,
+        a.suggestagentgrade = a.agentgrade,
+        a.endresult = 0,
+        a.endresulttype = 'BKH',
+        a.endagentgrade = A.AGENTGRADE
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMR'
+        and add_months(to_date(a.assessmonth, 'yyyymm'), 1)<![CDATA[<=]]>
+        to_date(a.assessendmonth, 'yyyymm')
+    </update>
+
+    <update id="updateTmrpTP">
+        merge into tmassessresult x
+                using (select a.assesssn, b.specialresult, b.specialgrade
+                from tmassessresult a, tmassessspecial b
+                where a.agentnum = b.agentnum
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMR'
+                and b.checkflag = '11'
+                and a.assessmonth = b.mor) t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.endresulttype = t.specialresult,
+                x.endagentgrade = t.specialgrade,
+                x.isspecialflag = 'Y',
+                x.endresult     = 99
+    </update>
+
+    <update id="updateTmrANP">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.assessanpupgapforecast <![CDATA[>=]]> 0 then
+                1
+                when c.assessanpkeepgapforecast <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as assessanp,
+                (case
+                when c.passrateupgap <![CDATA[>=]]> 0 then
+                1
+                when c.passratekeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as passrate,
+                (case
+                when c.takeuprateupgap <![CDATA[>=]]> 0 then
+                1
+                when c.takeupratekeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as takeuprate,
+                (case
+                when c.writtenwarningupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.writtenwarningkeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as writtenwarning,
+                c.lastquartermajorcasecnt,
+                c.majorcasecnt
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.assessanp           = t.assessanp,
+                x.passrate                = t.passrate,
+                x.takeuprate              = t.takeuprate,
+                x.writtenwarning          = t.writtenwarning,
+                x.lastquartermajorcasecnt = t.lastquartermajorcasecnt,
+                x.majorcasecnt            = t.majorcasecnt
+    </update>
+
+    <update id="updateTmrCalResult">
+        update tmassessresult a
+                set a.calresult = least(a.assessanp,
+                a.passrate,
+                a.takeuprate,
+                a.writtenwarning)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR'
+    </update>
+
+    <update id="updateTmrZZ">
+        update tmassessresult a
+                set a.resulttype = 'WC', a.calagentgrade = a.agentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR'
+                and a.calresult = 0
+    </update>
+
+    <update id="updateTmrTZ">
+        update tmassessresult a
+                set a.resulttype = 'JS'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR'
+                and a.calresult = 1
+    </update>
+
+    <update id="updateTmrJJ">
+        update tmassessresult a
+        set a.resulttype = 'JJ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMR'
+        and a.calresult = -1
+        and a.agentgrade
+        <![CDATA[<>]]>
+        'TMR1'
+    </update>
+
+    <update id="updateTmrLZ">
+        update tmassessresult a
+                set a.resulttype = 'LZ', a.calagentgrade = 'TMR1'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR'
+                and a.calresult = -1
+                and a.agentgrade = 'TMR1'
+    </update>
+
+    <update id="updateTmrCalGradeLZ">
+        merge into tmassessresult x
+                using (select a.assesssn, c.gradecode
+                from laagentgrade c, laagentgrade b, tmassessresult a
+                where c.noti = b.noti
+                and b.gradecode = a.agentgrade
+                and b.branchtype = '1'
+                and c.gradeproperty3 = '1'
+                and b.gradeproperty4 + a.calresult = c.gradeproperty4
+                and a.resulttype in ('JS', 'JJ')
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.calagentgrade = t.gradecode
+    </update>
+
+    <update id="updateTmrCAL2SUGGEST">
+        update tmassessresult a
+                set a.suggestresult = a.calresult,
+                a.suggestagentgrade = a.calagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR'
+    </update>
+
+    <update id="updateTmrSencMonth">
+        update tmassessresult a
+        set a.suggestresult = 0,
+        a.resulttype = 'WC',
+        A.suggestagentgrade = A.agentgrade
+        where a.resulttype not in ('JX', 'JS')
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMR'
+        and ((to_char(nvl(a.Indueformdate, date '2000-01-01'), 'yyyymm') <![CDATA[>]]>
+        tmassessbak.getQuarterFristMonth(a.assessmonth) and
+        to_char(nvl(a.Indueformdate, date '2000-01-01'), 'yyyymm')<![CDATA[<]]>
+            tmassessbak.getQuarterLastMonth(a.assessmonth)) or
+        (to_char(nvl(a.TRANSMANAGECOMDATE, date '2000-01-01'), 'yyyymm') <![CDATA[>]]>
+        tmassessbak.getQuarterFristMonth(a.assessmonth) and
+        to_char(nvl(a.TRANSMANAGECOMDATE, date '2000-01-01'), 'yyyymm')<![CDATA[<]]>
+            tmassessbak.getQuarterLastMonth(a.assessmonth)) or
+        (to_char(nvl(a.LASTGRADECHANGEDATE, date '2000-01-01'), 'yyyymm') <![CDATA[>]]>
+        tmassessbak.getQuarterFristMonth(a.assessmonth) and
+        to_char(nvl(a.LASTGRADECHANGEDATE, date '2000-01-01'), 'yyyymm')<![CDATA[<]]>
+            tmassessbak.getQuarterLastMonth(a.assessmonth)))
+    </update>
+
+    <update id="updateTmrIsThreeY">
+        UPDATE tmassessresult a
+        set a.endresulttype = 'WC',
+        a.endresult = 0,
+        a.endagentgrade = a.agentgrade
+        where a.resulttype
+        <![CDATA[<>]]>
+        'JX'
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMR'
+        and (a.isthreephasesflag = 'Y' or a.ISRECRUITMENTFLAG = 'Y')
+    </update>
+
+    <update id="updateTmrIsThreeN">
+        update tmassessresult a
+                set a.endresulttype = A.resultTYPE,
+                a.endresult     = a.suggestresult,
+                a.endagentgrade = A.suggestagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMR'
+                and A.endresulttype is null
+                and a.endresult is null
+                and a.endagentgrade is null
+    </update>
+
+    <update id="updateTmrIsAssess">
+        update tmassessresult a
+        set a.isassessflag = 'N',
+        a.resulttype = 'BKH',
+        a.calresult = 0,
+        a.calagentgrade = a.agentgrade,
+        a.suggestresult = 0,
+        a.suggestagentgrade = a.agentgrade,
+        a.endresult = 0,
+        a.endresulttype = 'BKH',
+        a.endagentgrade = A.AGENTGRADE
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMR'
+        and (last_day(to_date(a.assessmonth, 'yyyymm')) - a.employdate<![CDATA[<=]]> 90 or
+        to_char(a.LASTGRADECHANGEDATE, 'yyyymm') = a.assessendmonth or
+        to_char(a.TRANSMANAGECOMDATE, 'yyyymm') = a.assessendmonth or
+        to_char(a.INDUEFORMDATE, 'yyyymm') = a.assessendmonth)
+    </update>
+
+    <update id="updateTmrTP">
+        merge into tmassessresult x
+                using (select a.assesssn, b.specialresult, b.specialgrade
+                from tmassessresult a, tmassessspecial b
+                where a.agentnum = b.agentnum
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and b.checkflag = '11'
+                and a.gradelevel = 'TMR'
+                and a.assessmonth = b.mor) t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.endresulttype = t.specialresult,
+                x.endagentgrade = t.specialgrade,
+                x.isspecialflag = 'Y',
+                x.endresult     = 99
+    </update>
+
+    <update id="updateTmspANP">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.assessanpupgapforecast <![CDATA[>=]]> 0 then
+                1
+                when c.assessanpkeepgapforecast <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as assessanp,
+                (case
+                when c.passrateupgap <![CDATA[>=]]> 0 then
+                1
+                when c.passratekeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as passrate,
+                (case
+                when c.Teammanpowerupgap <![CDATA[>=]]> 0 then
+                1
+                when c.Teammanpowerkeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as teammanpower,
+                (case
+                when c.lossrateupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.lossratekeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as lossrate,
+                (case
+                when c.writtenwarningupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.writtenwarningkeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as writtenwarning,
+                c.lastquartermajorcasecnt,
+                c.majorcasecnt
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.assessanp               = t.assessanp,
+                x.passrate                = t.passrate,
+                x.teammanpower            = t.teammanpower,
+                x.lossrate                = t.lossrate,
+                x.writtenwarning          = t.writtenwarning,
+                x.lastquartermajorcasecnt = t.lastquartermajorcasecnt,
+                x.majorcasecnt            = t.majorcasecnt
+    </update>
+
+    <update id="updateCalResult">
+        update tmassessresult a
+                set a.calresult = least(a.assessanp,
+                a.passrate,
+                a.teammanpower,
+                a.lossrate,
+                a.writtenwarning)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmspZZ">
+        update tmassessresult a
+                set a.resulttype = 'ZZ'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+                and a.calresult = 0
+                and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+    </update>
+
+    <update id="updateTmspTZ">
+        update tmassessresult a
+        set a.resulttype = 'TZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and a.calresult = 0
+        and a.assessmonth
+        <![CDATA[<]]> a.trailendmonth
+    </update>
+
+    <update id="updateTmspJX">
+        update tmassessresult a
+        set a.resulttype = 'JX'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and a.calresult = -1
+        and a.assessmonth
+        <![CDATA[<]]> a.trailendmonth
+    </update>
+
+    <update id="updateTmspLZ">
+        update tmassessresult a
+                set a.resulttype = 'LZ'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+                and a.calresult = -1
+                and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+                and a.agentgrade = 'TMS1(P)'
+    </update>
+
+    <update id="updateTmspJZ">
+        update tmassessresult a set a.resulttype = 'JZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR} and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype='01' and a.gradelevel = 'TMS'
+        and a.calresult = -1 and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade <![CDATA[<>]]> 'TMS1(P)' and a.assessanp <![CDATA[>=]]>0
+    </update>
+
+    <update id="updateTmspJZD1">
+        update tmassessresult a
+        set a.resulttype = 'JZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade
+        <![CDATA[<>]]>
+        'TMR1(P)'
+        and a.assessanp
+        <![CDATA[<]]>
+        0
+        and a.agentgrade = (select min(b.agentgrade) as agentgrade
+        from tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[>]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and a.agenttype = b.agenttype
+        and b.assessresulttype = '01'
+        group by a.agentcode, a.assessmonth)
+    </update>
+
+    <update id="updateTmspJZD2">
+        update tmassessresult a
+        set a.resulttype = 'LZ',
+        a.calagentgrade = 'TMS1',
+        A.calresult =
+        (select c.gradeproperty4 * -1
+        from laagentgrade c
+        where c.gradecode = a.agentgrade)
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade
+        <![CDATA[<>]]>
+        'TMR1(P)'
+        and a.assessanp
+        <![CDATA[<]]>
+        0
+        and 'TMR1(P)' = (select min(b.agentgrade) as agentgrade
+        from tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[>]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and a.agenttype = b.agenttype
+        and b.assessresulttype = '01'
+        group by a.agentcode, a.assessmonth)
+    </update>
+
+    <update id="updateTmspJZD3">
+        update tmassessresult a
+        set a.resulttype = 'JZDTemp'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and a.calresult = -1
+        and a.assessmonth <![CDATA[>=]]> a.trailendmonth
+        and a.agentgrade
+        <![CDATA[<>]]>
+        'TMR1(P)'
+        and a.assessanp
+        <![CDATA[<]]>
+        0
+        and a.resulttype is null
+    </update>
+
+    <update id="updateTmspJZN">
+        merge into tmassessresult x
+        using (select a.agentcode, a.assessmonth, max(b.agentgrade) as agentgrade
+        from tmassessresult a, tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp<![CDATA[<=]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and a.agenttype = b.agenttype
+        and a.calresult = -1
+        and b.assessresulttype = '01'
+        and a.assessanp <![CDATA[<]]> 0
+        and a.gradelevel = 'TMS'
+        and a.resulttype = 'JZDTemp'
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        AND a.managecom = #{managecom,jdbcType=VARCHAR}
+        group by a.agentcode, a.assessmonth) t
+        on (t.agentcode = x.agentcode and x.assessmonth = #{calMonth,jdbcType=VARCHAR})
+        when matched then
+        update set x.calagentgrade = t.agentgrade,
+                x.resulttype = 'JZD'
+    </update>
+
+    <update id="updateTmspJZNResult">
+        merge into tmassessresult x using (select a.assesssn,
+                (select to_number(b.gradeproperty4)
+                from laagentgrade b
+                where b.branchtype = '1'
+                and b.gradecode = a.calagentgrade)-
+                (select to_number(b.gradeproperty4)
+                from laagentgrade b
+                where b.branchtype = '1'
+                and b.gradecode = a.agentgrade )
+                as result from tmassessresult a
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR} and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype='01'     and a.gradelevel = 'TMS' and a.resulttype ='JZD') t
+                on (x.assesssn = t.assesssn) when matched then update set x.calresult = t.result
+    </update>
+
+    <update id="updateTmspJZD4">
+        update tmassessresult a
+                set a.resulttype    = 'LZ',
+                a.calagentgrade = 'TMS1',
+                A.calresult    =
+                (select c.gradeproperty4 * -1
+                from laagentgrade c
+                where c.gradecode = a.agentgrade)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+                and a.calresult = -1
+                and a.resulttype = 'JZDTemp'
+    </update>
+
+    <update id="updateTmspJZNResultLZ">
+        update tmassessresult a
+        set a.resulttype = 'LZ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and a.resulttype in ('JZD', 'JZ', 'ZZ', 'TZ')
+        and (select to_number(b.gradeproperty4) + a.calresult
+        from laagentgrade b
+        where b.branchtype = '1'
+        and b.gradecode = a.agentgrade)<![CDATA[<=]]> 0
+    </update>
+
+    <update id="updateTmspCalGradeJX">
+        update tmassessresult a
+                set a.calagentgrade =  a.agentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'  and a.resulttype = 'JX'
+    </update>
+
+    <update id="updateTmspCalGradeLZ1">
+        update tmassessresult a
+                set a.calagentgrade = 'TMS1'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+                and a.resulttype = 'LZ'
+    </update>
+
+    <update id="updateTmspCalGradeLZ2">
+        merge into tmassessresult x
+                using (select a.assesssn, c.gradecode
+                from laagentgrade c, laagentgrade b, tmassessresult a
+                where c.noti = b.noti
+                and b.gradecode = a.agentgrade
+                and b.branchtype = '1'
+                and c.gradeproperty3 = '1'
+                and b.gradeproperty4 + a.calresult = c.gradeproperty4
+                and a.resulttype in ('ZZ', 'TZ', 'JZ', 'JZD')
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.calagentgrade = t.gradecode
+    </update>
+
+    <update id="updateTmspCal2suggest">
+        update tmassessresult a
+                set a.suggestresult = a.calresult,
+                a.suggestagentgrade = a.calagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmspIsThreeY">
+        merge into tmassessresult x
+        using (select a.assesssn, c.gradecode
+        from laagentgrade c, laagentgrade b, tmassessresult a
+        where c.noti = b.noti
+        and b.gradecode = a.agentgrade
+        and b.branchtype = '1'
+        and c.gradeproperty3 = '1'
+        and b.gradeproperty4 = c.gradeproperty4
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.resulttype <![CDATA[<>]]> 'JX'
+        and a.gradelevel = 'TMS'
+        and a.isthreephasesflag = 'Y') t
+        on (x.assesssn = t.assesssn)
+        when matched then
+        update
+        set x.endresulttype = 'ZZ',
+        x.endresult = x.suggestresult,
+        x.endagentgrade = t.gradecode
+    </update>
+
+    <update id="updateTmspIsThreeN">
+        update tmassessresult a
+                set a.endresulttype = A.resultTYPE,
+                a.endresult     = a.suggestresult,
+                a.endagentgrade = A.suggestagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+                and A.endresulttype is null
+                and a.endresult is null
+                and a.endagentgrade is null
+    </update>
+
+    <update id="updateTmspIsAssess">
+        update tmassessresult a
+        set a.isassessflag = 'N',
+        a.resulttype = 'BKH',
+        a.calresult = 0,
+        a.calagentgrade = a.agentgrade,
+        a.suggestresult = 0,
+        a.suggestagentgrade = a.agentgrade,
+        a.endresult = 0,
+        a.endresulttype = 'BKH',
+        a.endagentgrade = A.AGENTGRADE
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '01'
+        and a.gradelevel = 'TMS'
+        and add_months(to_date(a.assessmonth, 'yyyymm'), 1)<![CDATA[<=]]>
+        to_date(a.assessendmonth, 'yyyymm')
+    </update>
+
+    <update id="updateTmspTP">
+        merge into tmassessresult x
+                using (select a.assesssn, b.specialresult, b.specialgrade
+                from tmassessresult a, tmassessspecial b
+                where a.agentnum = b.agentnum
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '01'
+                and a.gradelevel = 'TMS'
+                and b.checkflag = '11'
+                and a.assessmonth = b.mor) t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.endresulttype = t.specialresult,
+                x.endagentgrade = t.specialgrade,
+                x.isspecialflag = 'Y',
+                x.endresult     = 99
+    </update>
+
+    <update id="updateTmstANP">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.assessanpupgapforecast <![CDATA[>=]]> 0 then
+                1
+                when c.assessanpkeepgapforecast <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as assessanp,
+                (case
+                when c.passrateupgap <![CDATA[>=]]> 0 then
+                1
+                when c.passratekeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as passrate,
+                (case
+                when c.Teammanpowerupgap <![CDATA[>=]]> 0 then
+                1
+                when c.Teammanpowerkeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as teammanpower,
+                (case
+                when c.lossrateupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.lossratekeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as lossrate,
+                (case
+                when c.writtenwarningupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.writtenwarningkeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as writtenwarning,
+                c.lastquartermajorcasecnt,
+                c.majorcasecnt
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.assessanp               = t.assessanp,
+                x.passrate                = t.passrate,
+                x.teammanpower            = t.teammanpower,
+                x.lossrate                = t.lossrate,
+                x.writtenwarning          = t.writtenwarning,
+                x.lastquartermajorcasecnt = t.lastquartermajorcasecnt,
+                x.majorcasecnt            = t.majorcasecnt
+    </update>
+
+    <update id="updateTmstCalResult">
+        update tmassessresult a
+                set a.calresult = least(a.assessanp,
+                a.passrate,
+                a.teammanpower,
+                a.lossrate,
+                a.writtenwarning)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmstZZ">
+        update tmassessresult a
+                set a.resulttype = 'WCSG'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+                and a.calresult = 0
+    </update>
+
+    <update id="updateTmstTZ">
+        update tmassessresult a
+                set a.resulttype = 'JSSG'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+                and a.calresult = 1
+    </update>
+
+    <update id="updateTmstJX">
+        update tmassessresult a
+        set a.resulttype = 'JX'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype in ('02', '03', '04')
+        and a.gradelevel = 'TMS'
+        and a.calresult = -1
+        and a.assessmonth
+        <![CDATA[<]]> a.TRAILPOSTENDMONTH
+    </update>
+
+    <update id="updateTmstLZ">
+        update tmassessresult a
+                set a.resulttype = 'LZ'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+                and a.calresult = -1
+                and a.assessmonth <![CDATA[>=]]> a.TRAILPOSTENDMONTH
+    </update>
+
+    <update id="updateTmstGrade">
+        update tmassessresult a
+                set a.calagentgrade = decode(a.resulttype, 'JSSG', 'TMS2', 'TMS1')
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmstCAL2SUGGEST">
+        update tmassessresult a
+                set a.suggestresult = a.calresult, a.suggestagentgrade = a.calagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmstIsThreeY">
+        update tmassessresult a
+        set a.suggestresult = 0,
+        a.resulttype = 'WCSG',
+        a.suggestagentgrade = 'TMS1'
+        where (a.lastquartermajorcasecnt = 1 and a.majorcasecnt = 1 or
+        a.majorcasecnt <![CDATA[>]]> 1)
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.resulttype
+        <![CDATA[<>]]>
+        'JX'
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype in ('02', '03', '04')
+        and a.gradelevel = 'TMS'
+        and a.isthreephasesflag = 'Y'
+    </update>
+
+    <update id="updateTmstIsThreeN">
+        update tmassessresult a
+                set a.endresulttype = A.resultTYPE,
+                a.endresult     = a.suggestresult,
+                a.endagentgrade = A.suggestagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+                and A.endresulttype is null
+                and a.endresult is null
+                and a.endagentgrade is null
+    </update>
+
+    <update id="updateTmstIsAssess">
+        update tmassessresult a
+        set a.isassessflag = 'N',
+        a.resulttype = 'BKH',
+        a.calresult = 0,
+        a.calagentgrade = a.agentgrade,
+        a.suggestresult = 0,
+        a.suggestagentgrade = a.agentgrade,
+        a.endresult = 0,
+        a.endresulttype = 'BKH',
+        a.endagentgrade = A.AGENTGRADE
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype in ('02', '03', '04')
+        and a.gradelevel = 'TMS'
+        and (last_day(to_date(a.assessmonth, 'yyyymm')) - a.employdate <![CDATA[<]]> 90
+        or a.assessendmonth = to_char(a.tmrtotmsdate, 'yyyymm'))
+    </update>
+
+    <update id="updateTmstTP">
+        merge into tmassessresult x
+                using (select a.assesssn, b.specialresult, b.specialgrade
+                from tmassessresult a, tmassessspecial b
+                where a.agentnum = b.agentnum
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype in ('02', '03', '04')
+                and a.gradelevel = 'TMS'
+                and b.checkflag = '11'
+                and a.assessmonth = b.mor) t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.endresulttype = t.specialresult,
+                x.endagentgrade = t.specialgrade,
+                x.isspecialflag = 'Y',
+                x.endresult     = 99
+    </update>
+
+    <update id="updateTmsANP">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.assessanpupgapforecast <![CDATA[>=]]> 0 then
+                1
+                when c.assessanpkeepgapforecast <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as assessanp,
+                (case
+                when c.passrateupgap <![CDATA[>=]]> 0 then
+                1
+                when c.passratekeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as passrate,
+                (case
+                when c.teammanpowerupgap <![CDATA[>=]]> 0 then
+                1
+                when c.teammanpowerkeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as teammanpower,
+                (case
+                when c.lossrateupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.lossratekeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as lossrate,
+                (case
+                when c.writtenwarningupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.writtenwarningkeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as writtenwarning,
+                c.lastquartermajorcasecnt,
+                c.majorcasecnt
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.assessanp               = t.assessanp,
+                x.passrate                = t.passrate,
+                x.teammanpower            = t.teammanpower,
+                x.writtenwarning          = t.writtenwarning,
+                x.lossrate                = t.lossrate,
+                x.lastquartermajorcasecnt = t.lastquartermajorcasecnt,
+                x.majorcasecnt            = t.majorcasecnt
+    </update>
+
+    <update id="updateTmsCalResult">
+        update tmassessresult a
+                set a.calresult = least(a.assessanp,
+                a.passrate,
+                a.lossrate,
+                a.teammanpower,
+                a.writtenwarning)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmsZZ">
+        update tmassessresult a
+                set a.resulttype = 'WC', a.calagentgrade = a.agentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS'
+                and a.calresult = 0
+    </update>
+
+    <update id="updateTmsTZ">
+        update tmassessresult a
+                set a.resulttype = 'JS'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS'
+                and a.calresult = 1
+    </update>
+
+    <update id="updateTmsJJ">
+        update tmassessresult a
+        set a.resulttype = 'JJ'
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMS'
+        and a.calresult = -1
+        and a.agentgrade
+        <![CDATA[<>]]>
+        'TMS1'
+    </update>
+
+    <update id="updateTmsLZ">
+        update tmassessresult a
+                set a.resulttype = 'LZ', a.calagentgrade = 'TMS1'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS'
+                and a.calresult = -1
+                and a.agentgrade = 'TMS1'
+    </update>
+
+    <update id="updateTmsCalGradeLZ">
+        merge into tmassessresult x
+                using (select a.assesssn, c.gradecode
+                from laagentgrade c, laagentgrade b, tmassessresult a
+                where c.noti = b.noti
+                and b.gradecode = a.agentgrade
+                and b.branchtype = '1'
+                and c.gradeproperty3 = '1'
+                and b.gradeproperty4 + a.calresult = c.gradeproperty4
+                and a.resulttype in ('JS', 'JJ')
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.calagentgrade = t.gradecode
+    </update>
+
+    <update id="updateTmsCAL2SUGGEST">
+        update tmassessresult a
+                set a.suggestresult     = a.calresult,
+                a.suggestagentgrade = a.calagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS'
+    </update>
+
+    <update id="updateTmsSencMonth">
+        update tmassessresult a
+        set a.suggestresult = 0,
+        a.resulttype = 'WC',
+        A.suggestagentgrade = A.agentgrade
+        where a.resulttype not in ('JX', 'JS')
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMS'
+        and ((to_char(nvl(a.Indueformdate, date '2000-01-01'), 'yyyymm') <![CDATA[>]]>
+        tmassessbak.getQuarterFristMonth(a.assessmonth) and
+        to_char(nvl(a.Indueformdate, date '2000-01-01'), 'yyyymm')<![CDATA[<]]>
+            tmassessbak.getQuarterLastMonth(a.assessmonth)) or
+        (to_char(nvl(a.TRANSMANAGECOMDATE, date '2000-01-01'), 'yyyymm') <![CDATA[>]]>
+        tmassessbak.getQuarterFristMonth(a.assessmonth) and
+        to_char(nvl(a.TRANSMANAGECOMDATE, date '2000-01-01'), 'yyyymm')<![CDATA[<]]>
+            tmassessbak.getQuarterLastMonth(a.assessmonth)) or
+        (to_char(nvl(a.LASTGRADECHANGEDATE, date '2000-01-01'), 'yyyymm') <![CDATA[>]]>
+        tmassessbak.getQuarterFristMonth(a.assessmonth) and
+        to_char(nvl(a.LASTGRADECHANGEDATE, date '2000-01-01'), 'yyyymm')<![CDATA[<]]>
+            tmassessbak.getQuarterLastMonth(a.assessmonth)))
+    </update>
+
+    <update id="updateTmsIsThreeY">
+        UPDATE tmassessresult a
+        set a.endresulttype = 'WC',
+        a.endresult = 0,
+        a.endagentgrade = a.agentgrade
+        where a.resulttype
+        <![CDATA[<>]]>
+        'JX'
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMS'
+        and (a.isthreephasesflag = 'Y' or a.ISRECRUITMENTFLAG = 'Y')
+    </update>
+
+    <update id="updateTmsIsThreeN">
+        update tmassessresult a
+                set a.endresulttype = A.resultTYPE,
+                a.endresult     = a.suggestresult,
+                a.endagentgrade = A.suggestagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and a.gradelevel = 'TMS'
+                and A.endresulttype is null
+                and a.endresult is null
+                and a.endagentgrade is null
+    </update>
+
+    <update id="updateTmsIsAssess">
+        update tmassessresult a
+        set a.isassessflag = 'N',
+        a.resulttype = 'BKH',
+        a.calresult = 0,
+        a.calagentgrade = a.agentgrade,
+        a.suggestresult = 0,
+        a.suggestagentgrade = a.agentgrade,
+        a.endresult = 0,
+        a.endresulttype = 'BKH',
+        a.endagentgrade = A.AGENTGRADE
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.agenttype = '05'
+        and a.gradelevel = 'TMS'
+        and (last_day(to_date(a.assessmonth, 'yyyymm')) - a.employdate<![CDATA[<=]]> 90 or
+        to_char(a.LASTGRADECHANGEDATE, 'yyyymm') = a.assessendmonth or
+        to_char(a.TRANSMANAGECOMDATE, 'yyyymm') = a.assessendmonth or
+        to_char(a.INDUEFORMDATE, 'yyyymm') = a.assessendmonth)
+    </update>
+
+    <update id="updateTmsTP">
+        merge into tmassessresult x
+                using (select a.assesssn, b.specialresult, b.specialgrade
+                from tmassessresult a, tmassessspecial b
+                where a.agentnum = b.agentnum
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.agenttype = '05'
+                and b.checkflag = '11'
+                and a.gradelevel = 'TMS'
+                and a.assessmonth = b.mor) t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.endresulttype = t.specialresult,
+                x.endagentgrade = t.specialgrade,
+                x.isspecialflag = 'Y',
+                x.endresult     = '99'
+    </update>
+
+    <update id="updateCcmANP">
+        merge into tmassessresult x
+                using (select a.assesssn,
+                (case
+                when c.assessanpupgapforecast <![CDATA[>=]]> 0 then
+                1
+                when c.assessanpkeepgapforecast <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as assessanp,
+                (case
+                when c.passrateupgap <![CDATA[>=]]> 0 then
+                1
+                when c.passratekeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as passrate,
+                (case
+                when c.directormanpowerupgap <![CDATA[>=]]> 0 then
+                1
+                when c.directormanpowerkeepgap <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as directormanpower,
+                (case
+                when c.lossrateupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.lossratekeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as lossrate,
+                (case
+                when c.writtenwarningupgap * -1 <![CDATA[>=]]> 0 then
+                1
+                when c.writtenwarningkeepgap * -1 <![CDATA[>=]]> 0 then
+                0
+                else
+                -1
+                end) as writtenwarning,
+                c.lastquartermajorcasecnt,
+                c.majorcasecnt
+                from tmassessactual c, tmassessresult a
+                where c.mor = a.assessmonth
+                and c.agentcode = a.agentcode
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.assessanp           = t.assessanp,
+                x.passrate                = t.passrate,
+                x.directormanpower        = t.directormanpower,
+                x.writtenwarning          = t.writtenwarning,
+                x.lossrate                = t.lossrate,
+                x.lastquartermajorcasecnt = t.lastquartermajorcasecnt,
+                x.majorcasecnt            = t.majorcasecnt
+    </update>
+
+    <update id="CalResult">
+        update tmassessresult a
+                set a.calresult = least(a.assessanp,
+                a.passrate,
+                a.lossrate,
+                a.directormanpower,
+                a.writtenwarning)
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM'
+    </update>
+
+    <update id="updateCcmZZ">
+        update tmassessresult a
+                set a.resulttype = 'WC', a.calagentgrade = a.agentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM'
+                and a.calresult = 0
+    </update>
+
+    <update id="updateCcmTZ">
+        update tmassessresult a
+                set a.resulttype = 'JS'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM'
+                and a.calresult = 1
+    </update>
+
+    <update id="updateCcmJJ">
+        update tmassessresult a
+                set a.resulttype = 'JJ'
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM'
+                and a.calresult = -1
+                and a.agentgrade not in ('CCM1', 'ACCM', 'CCM1(P)')
+    </update>
+
+    <update id="updateCcmLZ">
+        update tmassessresult a
+                set a.resulttype = 'PIP', a.calagentgrade = a.agentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM'
+                and a.calresult = -1
+                and a.agentgrade in ('CCM1', 'ACCM', 'CCM1(P)')
+    </update>
+
+    <update id="updateCcmCalGradeLZ">
+        merge into tmassessresult x
+                using (select a.assesssn, c.gradecode
+                from laagentgrade c, laagentgrade b, tmassessresult a
+                where c.noti = b.noti
+                and b.gradecode = a.agentgrade
+                and b.branchtype = '1'
+                and c.gradeproperty3 = '1'
+                and b.gradeproperty4 + a.calresult = c.gradeproperty4
+                and a.resulttype in ('JS', 'JJ')
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM') t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update set x.calagentgrade = t.gradecode
+    </update>
+
+    <update id="updateCcmCAL2SUGGEST">
+        update tmassessresult a
+                set a.suggestresult     = a.calresult,
+                a.suggestagentgrade = a.calagentgrade
+                where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM'
+    </update>
+
+    <update id="updateCcmIsThreeY">
+        UPDATE tmassessresult a
+        set a.endresulttype = 'WC',
+        a.endresult = 0,
+        a.endagentgrade = a.agentgrade
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.resulttype<![CDATA[<>]]>'JX'
+        and a.gradelevel = 'CCM'
+        and (a.isthreephasesflag = 'Y' or a.ISRECRUITMENTFLAG = 'Y')
+    </update>
+
+    <update id="updateCcmIsThreeN">
+        update tmassessresult a
+                set a.endresulttype = A.resultTYPE,
+                a.endresult     = a.suggestresult,
+                a.endagentgrade = A.suggestagentgrade
+                where  a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and a.gradelevel = 'CCM' and A.endresulttype is null and  a.endresult is null and  a.endagentgrade is null
+    </update>
+
+    <update id="updateCcmIsAssess">
+        update tmassessresult a
+        set a.isassessflag = 'N',
+        a.resulttype = 'BKH',
+        a.calresult = 0,
+        a.calagentgrade = a.agentgrade,
+        a.suggestresult = 0,
+        a.suggestagentgrade = a.agentgrade,
+        a.endresult = 0,
+        a.endresulttype = 'BKH',
+        a.endagentgrade = A.AGENTGRADE
+        where a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        and a.managecom = #{managecom,jdbcType=VARCHAR}
+        and a.gradelevel = 'CCM'
+        and (last_day(to_date(a.assessmonth, 'yyyymm')) - a.employdate<![CDATA[<=]]> 90 or
+        months_between(last_day(to_date(a.assessendmonth, 'yyyymm')),
+        a.LASTGRADECHANGEDATE - 1) <![CDATA[<]]> 6)
+    </update>
+
+    <update id="updateCcmTP">
+        merge into tmassessresult x
+                using (select a.assesssn, b.specialresult, b.specialgrade
+                from tmassessresult a, tmassessspecial b
+                where a.agentnum = b.agentnum
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+                and a.managecom = #{managecom,jdbcType=VARCHAR}
+                and b.checkflag = '11'
+                and a.gradelevel = 'CCM'
+                and a.assessmonth = b.mor) t
+                on (x.assesssn = t.assesssn)
+                when matched then
+                update
+                set x.endresulttype = t.specialresult,
+                x.endagentgrade = t.specialgrade,
+                x.isspecialflag = 'Y',
+                x.endresult     = 99
+    </update>
+
+    <update id="updateAllANPGrade">
+        merge into tmassessresult x
+        using (select a.agentcode, a.assessmonth, max(b.agentgrade) as agentgrade
+        from tmassessresult a, tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[<=]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and b.agenttype = '05'
+        and b.assessresulttype = '01'
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        group by a.agentcode, a.assessmonth) t
+        on (t.agentcode = x.agentcode and x.assessmonth = #{managecom,jdbcType=VARCHAR})
+        when matched then
+        update set x.anpagentgrade = t.agentgrade
+    </update>
+
+    <update id="updateANPGradeCCM">
+        merge into tmassessresult x
+        using (select a.agentcode, a.assessmonth, max(b.agentgrade) as agentgrade
+        from tmassessresult a, tmassessrule b, tmassessactual c
+        where a.agentcode = c.agentcode
+        and a.managecom = b.managecom
+        and a.assessmonth = c.mor
+        and b.assessanp <![CDATA[<=]]> c.assessanpforecast
+        and a.gradelevel = b.agentlevel
+        and b.agenttype = '01'
+        AND a.gradelevel = 'CCM'
+        and b.assessresulttype = '01'
+        and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+        group by a.agentcode, a.assessmonth) t
+        on (t.agentcode = x.agentcode and x.assessmonth = #{calMonth,jdbcType=VARCHAR})
+        when matched then
+        update set x.anpagentgrade = t.agentgrade
+    </update>
+
+    <update id="updateYearTP">
+        update tmassessresult a
+                set a.isyearspecialflag = 'Y'
+                where exists (select 1
+                from tmassessspecial b
+                where a.agentnum = b.agentnum
+                and b.checkflag = '11'
+                and b.istheyearcountflag = 'Y'
+                and substr(b.mor, 0, 4) = substr(#{calMonth,jdbcType=VARCHAR}, 0, 4))
+                and a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+    </update>
+
+    <update id="JJDJZD">
+        UPDATE TMASSESSRESULT a set a.resulttype = decode(a.resulttype,'JZD','JZ','JJD','JJ',a.resulttype),
+                a.Endresulttype = decode(a.Endresulttype,'JZD','JZ','JJD','JJ',a.Endresulttype) where  a.assessmonth = #{calMonth,jdbcType=VARCHAR}
+    </update>
+
+</mapper>

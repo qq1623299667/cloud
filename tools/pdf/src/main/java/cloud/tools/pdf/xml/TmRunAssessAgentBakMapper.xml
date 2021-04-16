@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmRunAssessAgentBakMapper">
+
+    <select id="selectAssessSureMonth" resultType="java.lang.String">
+        select t.codealias from ldcode t where t.codetype = 'tm_AssesSureMonth'
+    </select>
+
+    <select id="selectNextAssessSureMonth" parameterType="java.lang.String" resultType="java.lang.String">
+        select to_char(add_months(to_date(#{assessSureMonth,jdbcType=VARCHAR},'YYYYMM'),1),'YYYYMM') from dual
+    </select>
+
+    <select id="selectHRSureMonth" resultType="java.lang.String">
+        SELECT t.codealias FROM LDCODE T WHERE t.codetype = 'TMHRBackupsSureMonth'
+    </select>
+
+    <delete id="deleteWithBakMonth" parameterType="java.lang.String">
+        delete from TMAssessAgentC t where t.bakmonth = #{bakMonth,jdbcType=VARCHAR}
+    </delete>
+
+    <insert id="insertTMAssessAgent" parameterType="java.util.Map" statementType="CALLABLE">
+          <![CDATA[
+        {call TMAssessBak.TMAssessAgentBak(
+                #{bakMonth, mode=IN, jdbcType=VARCHAR},
+                #{hrSureMonth, mode=IN, jdbcType=VARCHAR},
+                #{p_message, mode=OUT, jdbcType=VARCHAR}
+                )}
+        ]]>
+    </insert>
+
+</mapper>

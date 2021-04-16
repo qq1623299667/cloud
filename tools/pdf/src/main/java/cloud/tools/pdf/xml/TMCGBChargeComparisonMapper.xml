@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TMCGBChargeComparisonMapper">
+
+<!--auto generated Code-->
+    <resultMap id="AllColumnMap" type="com.cignacmb.smart.job.common.tm.entity.TMCGBChargeComparison">
+        <result column="id" property="id"/>
+        <result column="csvdate" property="csvdate"/>
+        <result column="transseq" property="transseq"/>
+        <result column="contno" property="contno"/>
+        <result column="banktype" property="banktype"/>
+        <result column="cardtype" property="cardtype"/>
+        <result column="thispayyear" property="thispayyear"/>
+        <result column="anp" property="anp"/>
+        <result column="prem" property="prem"/>
+        <result column="cumulativemoney" property="cumulativemoney"/>
+        <result column="cumulativepaycount" property="cumulativepaycount"/>
+        <result column="thisbusstype" property="thisbusstype"/>
+        <result column="thismoney" property="thismoney"/>
+        <result column="thistotalpaycount" property="thistotalpaycount"/>
+        <result column="isre" property="isre"/>
+        <result column="thisfirstyearmoney" property="thisfirstyearmoney"/>
+        <result column="thissecondyearmoney" property="thissecondyearmoney"/>
+        <result column="thisthirdyearmoney" property="thisthirdyearmoney"/>
+        <result column="thisfourthyearmoney" property="thisfourthyearmoney"/>
+        <result column="thisfifthyearmoney" property="thisfifthyearmoney"/>
+        <result column="thisabovefifthyearmoney" property="thisabovefifthyearmoney"/>
+        <result column="surrenderdate" property="surrenderdate"/>
+        <result column="remark" property="remark"/>
+        <result column="enteraccdate" property="enteraccdate"/>
+        <result column="settlementsponsor" property="settlementsponsor"/>
+        <result column="type" property="type"/>
+        <result column="paytodate" property="paytodate"/>
+        <result column="makedate" property="makedate"/>
+        <result column="maketime" property="maketime"/>
+        <result column="modifydate" property="modifydate"/>
+        <result column="modifytime" property="modifytime"/>
+        <result column="bankcode" property="bankcode"/>
+        <result column="oppbankcode" property="oppbankcode"/>
+        <result column="bankcodeflag" property="bankcodeflag"/>
+        <result column="transsourcesys" property="transsourcesys"/>
+    </resultMap>
+
+<!--auto generated Code-->
+    <sql id="all_column">
+        id,
+        csvdate,
+        transseq,
+        contno,
+        banktype,
+        cardtype,
+        thispayyear,
+        anp,
+        prem,
+        cumulativemoney,
+        cumulativepaycount,
+        thisbusstype,
+        thismoney,
+        thistotalpaycount,
+        isre,
+        thisfirstyearmoney,
+        thissecondyearmoney,
+        thisthirdyearmoney,
+        thisfourthyearmoney,
+        thisfifthyearmoney,
+        thisabovefifthyearmoney,
+        surrenderdate,
+        remark,
+        enteraccdate,
+        settlementsponsor,
+        type,
+        paytodate,
+        makedate,
+        maketime,
+        modifydate,
+        modifytime,
+        bankcode,
+        oppbankcode,
+        bankcodeflag,
+        transsourcesys
+    </sql>
+
+<!--auto generated Code-->
+    <insert id="insert">
+        INSERT INTO t_m_c_g_b_charge_comparison
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pojo.id != null"> id, </if>
+            <if test="pojo.csvdate != null"> csvdate, </if>
+            <if test="pojo.transseq != null"> transseq, </if>
+            <if test="pojo.contno != null"> contno, </if>
+            <if test="pojo.banktype != null"> banktype, </if>
+            <if test="pojo.cardtype != null"> cardtype, </if>
+            <if test="pojo.thispayyear != null"> thispayyear, </if>
+            <if test="pojo.anp != null"> anp, </if>
+            <if test="pojo.prem != null"> prem, </if>
+            <if test="pojo.cumulativemoney != null"> cumulativemoney, </if>
+            <if test="pojo.cumulativepaycount != null"> cumulativepaycount, </if>
+            <if test="pojo.thisbusstype != null"> thisbusstype, </if>
+            <if test="pojo.thismoney != null"> thismoney, </if>
+            <if test="pojo.thistotalpaycount != null"> thistotalpaycount, </if>
+            <if test="pojo.isre != null"> isre, </if>
+            <if test="pojo.thisfirstyearmoney != null"> thisfirstyearmoney, </if>
+            <if test="pojo.thissecondyearmoney != null"> thissecondyearmoney, </if>
+            <if test="pojo.thisthirdyearmoney != null"> thisthirdyearmoney, </if>
+            <if test="pojo.thisfourthyearmoney != null"> thisfourthyearmoney, </if>
+            <if test="pojo.thisfifthyearmoney != null"> thisfifthyearmoney, </if>
+            <if test="pojo.thisabovefifthyearmoney != null"> thisabovefifthyearmoney, </if>
+            <if test="pojo.surrenderdate != null"> surrenderdate, </if>
+            <if test="pojo.remark != null"> remark, </if>
+            <if test="pojo.enteraccdate != null"> enteraccdate, </if>
+            <if test="pojo.settlementsponsor != null"> settlementsponsor, </if>
+            <if test="pojo.type != null"> type, </if>
+            <if test="pojo.paytodate != null"> paytodate, </if>
+            <if test="pojo.makedate != null"> makedate, </if>
+            <if test="pojo.maketime != null"> maketime, </if>
+            <if test="pojo.modifydate != null"> modifydate, </if>
+            <if test="pojo.modifytime != null"> modifytime, </if>
+            <if test="pojo.bankcode != null"> bankcode, </if>
+            <if test="pojo.oppbankcode != null"> oppbankcode, </if>
+            <if test="pojo.bankcodeflag != null"> bankcodeflag, </if>
+            <if test="pojo.transsourcesys != null"> transsourcesys, </if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pojo.id != null"> #{pojo.id}, </if>
+            <if test="pojo.csvdate != null"> #{pojo.csvdate}, </if>
+            <if test="pojo.transseq != null"> #{pojo.transseq}, </if>
+            <if test="pojo.contno != null"> #{pojo.contno}, </if>
+            <if test="pojo.banktype != null"> #{pojo.banktype}, </if>
+            <if test="pojo.cardtype != null"> #{pojo.cardtype}, </if>
+            <if test="pojo.thispayyear != null"> #{pojo.thispayyear}, </if>
+            <if test="pojo.anp != null"> #{pojo.anp}, </if>
+            <if test="pojo.prem != null"> #{pojo.prem}, </if>
+            <if test="pojo.cumulativemoney != null"> #{pojo.cumulativemoney}, </if>
+            <if test="pojo.cumulativepaycount != null"> #{pojo.cumulativepaycount}, </if>
+            <if test="pojo.thisbusstype != null"> #{pojo.thisbusstype}, </if>
+            <if test="pojo.thismoney != null"> #{pojo.thismoney}, </if>
+            <if test="pojo.thistotalpaycount != null"> #{pojo.thistotalpaycount}, </if>
+            <if test="pojo.isre != null"> #{pojo.isre}, </if>
+            <if test="pojo.thisfirstyearmoney != null"> #{pojo.thisfirstyearmoney}, </if>
+            <if test="pojo.thissecondyearmoney != null"> #{pojo.thissecondyearmoney}, </if>
+            <if test="pojo.thisthirdyearmoney != null"> #{pojo.thisthirdyearmoney}, </if>
+            <if test="pojo.thisfourthyearmoney != null"> #{pojo.thisfourthyearmoney}, </if>
+            <if test="pojo.thisfifthyearmoney != null"> #{pojo.thisfifthyearmoney}, </if>
+            <if test="pojo.thisabovefifthyearmoney != null"> #{pojo.thisabovefifthyearmoney}, </if>
+            <if test="pojo.surrenderdate != null"> #{pojo.surrenderdate}, </if>
+            <if test="pojo.remark != null"> #{pojo.remark}, </if>
+            <if test="pojo.enteraccdate != null"> #{pojo.enteraccdate}, </if>
+            <if test="pojo.settlementsponsor != null"> #{pojo.settlementsponsor}, </if>
+            <if test="pojo.type != null"> #{pojo.type}, </if>
+            <if test="pojo.paytodate != null"> #{pojo.paytodate}, </if>
+            <if test="pojo.makedate != null"> #{pojo.makedate}, </if>
+            <if test="pojo.maketime != null"> #{pojo.maketime}, </if>
+            <if test="pojo.modifydate != null"> #{pojo.modifydate}, </if>
+            <if test="pojo.modifytime != null"> #{pojo.modifytime}, </if>
+            <if test="pojo.bankcode != null"> #{pojo.bankcode}, </if>
+            <if test="pojo.oppbankcode != null"> #{pojo.oppbankcode}, </if>
+            <if test="pojo.bankcodeflag != null"> #{pojo.bankcodeflag}, </if>
+            <if test="pojo.transsourcesys != null"> #{pojo.transsourcesys}, </if>
+        </trim>
+    </insert>
+
+<!--auto generated Code-->
+    <insert id="insertList">
+        INSERT INTO t_m_c_g_b_charge_comparison(
+        <include refid="all_column"/>
+        )VALUES
+        <foreach collection="pojos" item="pojo" index="index" separator=",">
+            (
+            #{pojo.id},
+            #{pojo.csvdate},
+            #{pojo.transseq},
+            #{pojo.contno},
+            #{pojo.banktype},
+            #{pojo.cardtype},
+            #{pojo.thispayyear},
+            #{pojo.anp},
+            #{pojo.prem},
+            #{pojo.cumulativemoney},
+            #{pojo.cumulativepaycount},
+            #{pojo.thisbusstype},
+            #{pojo.thismoney},
+            #{pojo.thistotalpaycount},
+            #{pojo.isre},
+            #{pojo.thisfirstyearmoney},
+            #{pojo.thissecondyearmoney},
+            #{pojo.thisthirdyearmoney},
+            #{pojo.thisfourthyearmoney},
+            #{pojo.thisfifthyearmoney},
+            #{pojo.thisabovefifthyearmoney},
+            #{pojo.surrenderdate},
+            #{pojo.remark},
+            #{pojo.enteraccdate},
+            #{pojo.settlementsponsor},
+            #{pojo.type},
+            #{pojo.paytodate},
+            #{pojo.makedate},
+            #{pojo.maketime},
+            #{pojo.modifydate},
+            #{pojo.modifytime},
+            #{pojo.bankcode},
+            #{pojo.oppbankcode},
+            #{pojo.bankcodeflag},
+            #{pojo.transsourcesys}
+            )
+        </foreach>
+    </insert>
+
+<!--auto generated Code-->
+    <update id="update">
+        UPDATE t_m_c_g_b_charge_comparison
+        <set>
+            <if test="pojo.id != null"> id = #{pojo.id}, </if>
+            <if test="pojo.csvdate != null"> csvdate = #{pojo.csvdate}, </if>
+            <if test="pojo.transseq != null"> transseq = #{pojo.transseq}, </if>
+            <if test="pojo.contno != null"> contno = #{pojo.contno}, </if>
+            <if test="pojo.banktype != null"> banktype = #{pojo.banktype}, </if>
+            <if test="pojo.cardtype != null"> cardtype = #{pojo.cardtype}, </if>
+            <if test="pojo.thispayyear != null"> thispayyear = #{pojo.thispayyear}, </if>
+            <if test="pojo.anp != null"> anp = #{pojo.anp}, </if>
+            <if test="pojo.prem != null"> prem = #{pojo.prem}, </if>
+            <if test="pojo.cumulativemoney != null"> cumulativemoney = #{pojo.cumulativemoney}, </if>
+            <if test="pojo.cumulativepaycount != null"> cumulativepaycount = #{pojo.cumulativepaycount}, </if>
+            <if test="pojo.thisbusstype != null"> thisbusstype = #{pojo.thisbusstype}, </if>
+            <if test="pojo.thismoney != null"> thismoney = #{pojo.thismoney}, </if>
+            <if test="pojo.thistotalpaycount != null"> thistotalpaycount = #{pojo.thistotalpaycount}, </if>
+            <if test="pojo.isre != null"> isre = #{pojo.isre}, </if>
+            <if test="pojo.thisfirstyearmoney != null"> thisfirstyearmoney = #{pojo.thisfirstyearmoney}, </if>
+            <if test="pojo.thissecondyearmoney != null"> thissecondyearmoney = #{pojo.thissecondyearmoney}, </if>
+            <if test="pojo.thisthirdyearmoney != null"> thisthirdyearmoney = #{pojo.thisthirdyearmoney}, </if>
+            <if test="pojo.thisfourthyearmoney != null"> thisfourthyearmoney = #{pojo.thisfourthyearmoney}, </if>
+            <if test="pojo.thisfifthyearmoney != null"> thisfifthyearmoney = #{pojo.thisfifthyearmoney}, </if>
+            <if test="pojo.thisabovefifthyearmoney != null"> thisabovefifthyearmoney = #{pojo.thisabovefifthyearmoney}, </if>
+            <if test="pojo.surrenderdate != null"> surrenderdate = #{pojo.surrenderdate}, </if>
+            <if test="pojo.remark != null"> remark = #{pojo.remark}, </if>
+            <if test="pojo.enteraccdate != null"> enteraccdate = #{pojo.enteraccdate}, </if>
+            <if test="pojo.settlementsponsor != null"> settlementsponsor = #{pojo.settlementsponsor}, </if>
+            <if test="pojo.type != null"> type = #{pojo.type}, </if>
+            <if test="pojo.paytodate != null"> paytodate = #{pojo.paytodate}, </if>
+            <if test="pojo.makedate != null"> makedate = #{pojo.makedate}, </if>
+            <if test="pojo.maketime != null"> maketime = #{pojo.maketime}, </if>
+            <if test="pojo.modifydate != null"> modifydate = #{pojo.modifydate}, </if>
+            <if test="pojo.modifytime != null"> modifytime = #{pojo.modifytime}, </if>
+            <if test="pojo.bankcode != null"> bankcode = #{pojo.bankcode}, </if>
+            <if test="pojo.oppbankcode != null"> oppbankcode = #{pojo.oppbankcode}, </if>
+            <if test="pojo.bankcodeflag != null"> bankcodeflag = #{pojo.bankcodeflag}, </if>
+            <if test="pojo.transsourcesys != null"> transsourcesys = #{pojo.transsourcesys} </if>
+        </set>
+         WHERE id = #{pojo.id}
+    </update>
+
+<!--auto generated Code-->
+    <select id="select" resultMap="AllColumnMap">
+        SELECT <include refid="all_column"/>
+        FROM t_m_c_g_b_charge_comparison
+        <where>
+            <if test="pojo.id != null"> AND id = #{pojo.id} </if>
+            <if test="pojo.csvdate != null"> AND csvdate = #{pojo.csvdate} </if>
+            <if test="pojo.transseq != null"> AND transseq = #{pojo.transseq} </if>
+            <if test="pojo.contno != null"> AND contno = #{pojo.contno} </if>
+            <if test="pojo.banktype != null"> AND banktype = #{pojo.banktype} </if>
+            <if test="pojo.cardtype != null"> AND cardtype = #{pojo.cardtype} </if>
+            <if test="pojo.thispayyear != null"> AND thispayyear = #{pojo.thispayyear} </if>
+            <if test="pojo.anp != null"> AND anp = #{pojo.anp} </if>
+            <if test="pojo.prem != null"> AND prem = #{pojo.prem} </if>
+            <if test="pojo.cumulativemoney != null"> AND cumulativemoney = #{pojo.cumulativemoney} </if>
+            <if test="pojo.cumulativepaycount != null"> AND cumulativepaycount = #{pojo.cumulativepaycount} </if>
+            <if test="pojo.thisbusstype != null"> AND thisbusstype = #{pojo.thisbusstype} </if>
+            <if test="pojo.thismoney != null"> AND thismoney = #{pojo.thismoney} </if>
+            <if test="pojo.thistotalpaycount != null"> AND thistotalpaycount = #{pojo.thistotalpaycount} </if>
+            <if test="pojo.isre != null"> AND isre = #{pojo.isre} </if>
+            <if test="pojo.thisfirstyearmoney != null"> AND thisfirstyearmoney = #{pojo.thisfirstyearmoney} </if>
+            <if test="pojo.thissecondyearmoney != null"> AND thissecondyearmoney = #{pojo.thissecondyearmoney} </if>
+            <if test="pojo.thisthirdyearmoney != null"> AND thisthirdyearmoney = #{pojo.thisthirdyearmoney} </if>
+            <if test="pojo.thisfourthyearmoney != null"> AND thisfourthyearmoney = #{pojo.thisfourthyearmoney} </if>
+            <if test="pojo.thisfifthyearmoney != null"> AND thisfifthyearmoney = #{pojo.thisfifthyearmoney} </if>
+            <if test="pojo.thisabovefifthyearmoney != null"> AND thisabovefifthyearmoney = #{pojo.thisabovefifthyearmoney} </if>
+            <if test="pojo.surrenderdate != null"> AND surrenderdate = #{pojo.surrenderdate} </if>
+            <if test="pojo.remark != null"> AND remark = #{pojo.remark} </if>
+            <if test="pojo.enteraccdate != null"> AND enteraccdate = #{pojo.enteraccdate} </if>
+            <if test="pojo.settlementsponsor != null"> AND settlementsponsor = #{pojo.settlementsponsor} </if>
+            <if test="pojo.type != null"> AND type = #{pojo.type} </if>
+            <if test="pojo.paytodate != null"> AND paytodate = #{pojo.paytodate} </if>
+            <if test="pojo.makedate != null"> AND makedate = #{pojo.makedate} </if>
+            <if test="pojo.maketime != null"> AND maketime = #{pojo.maketime} </if>
+            <if test="pojo.modifydate != null"> AND modifydate = #{pojo.modifydate} </if>
+            <if test="pojo.modifytime != null"> AND modifytime = #{pojo.modifytime} </if>
+            <if test="pojo.bankcode != null"> AND bankcode = #{pojo.bankcode} </if>
+            <if test="pojo.oppbankcode != null"> AND oppbankcode = #{pojo.oppbankcode} </if>
+            <if test="pojo.bankcodeflag != null"> AND bankcodeflag = #{pojo.bankcodeflag} </if>
+            <if test="pojo.transsourcesys != null"> AND transsourcesys = #{pojo.transsourcesys} </if>
+        </where>
+        LIMIT 1000 
+    </select>
+    <select id="isChargeComparisonDataExist" resultType="java.lang.Integer">
+        SELECT
+         count(1)
+        FROM
+        -- CGB项目手续费对账单数据接口表
+         TM_CGB_ChargeComparison a
+        WHERE
+         a.csvdate = to_date(#{CalDate}, 'yyyy-MM-dd')
+    </select>
+    <select id="isServiceChargeDataExist" resultType="java.lang.Integer">
+        WITH tt AS (
+            SELECT
+             count(b.SETTLEMENTSPONSOR) AS total
+            FROM
+             tmchargecallognew b
+            WHERE
+             -- 状态 计算完成
+             b.state = '11'
+             -- 未截止
+             AND b.enddate >= to_date(#{CalDate}, 'yyyy-MM-dd')
+             AND b.settlementsponsor != 'ZZZ' )
+            SELECT
+            CASE
+             WHEN total = (
+             SELECT
+             count(*)
+             FROM
+             -- TM手续费计算日志表
+             tmchargecallognew a
+             WHERE
+             -- 结算Sponsor ZZZ 不需要计算手续费
+             a.settlementsponsor != 'ZZZ') THEN '1'
+             ELSE '0'
+             END
+            FROM
+             tt
+
+    </select>
+    <select id="createChargeComparisonData" resultType="java.lang.String">
+        <![CDATA[
+            {call pkg_tm_chargecomparison.p_cgb_chargecomparison(
+                #{CalDate, mode=IN, jdbcType=VARCHAR},
+                #{Flag, mode=IN, jdbcType=VARCHAR},
+                #{result, mode=OUT, jdbcType=VARCHAR}
+            )}
+        ]]>
+    </select>
+    <select id="selectExcelList" resultType="java.util.Map">
+        SELECT
+             a.TransSeq,
+             a.ContNo,
+             a.BankType,
+             a.CardType,
+             a.ThisPayYear,
+             a.ANP,
+             a.Prem,
+             a.CumulativeMoney,
+             a.CumulativePayCount,
+             a.ThisBussType,
+             a.ThisMoney,
+             a.ThisTotalPayCount,
+             a.IsRE,
+             a.ThisFirstYearMoney,
+             a.ThisSecondYearMoney,
+             a.ThisThirdYearMoney,
+             a.ThisFourthYearMoney,
+             a.ThisFifthYearMoney,
+             a.ThisAboveFifthYearMoney,
+             a.SurrenderDate,
+             a.Remark
+            FROM
+             TM_CGB_ChargeComparison a
+            WHERE
+             a.csvdate = to_date(#{CalDate}, 'yyyy-MM-dd')
+
+    </select>
+    <select id="getSftpConnect" resultType="java.util.Map">
+        SELECT
+            sysvar,
+            sysvarvalue
+        FROM
+            ldsysvar
+        WHERE
+            sysvartype = 'CGB'
+    </select>
+
+    <!--auto generated Code-->
+    <delete id="delete">
+        DELETE FROM t_m_c_g_b_charge_comparison where id = #{id}
+    </delete>
+</mapper>

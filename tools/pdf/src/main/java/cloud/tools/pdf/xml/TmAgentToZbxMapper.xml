@@ -1,0 +1,1064 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentToZbxMapper">
+
+    <insert id="insertTmAgentInfoToZbxBak">
+        insert into TMAGENTINFOTOZBX_BAK bak
+        (
+        bak.BAKSN,
+        bak.AGENTSN,
+        bak.NAME,
+        bak.SEX,
+        bak.BIRTHDAY,
+        bak.QUAFNO,
+        bak.QUAFSTARTDATE,
+        bak.QUAFENDDATE,
+        bak.SALNO,
+        bak.AGENTSIGNFLAG,
+        bak.IDTYPE,
+        bak.IDNO,
+        bak.MOBILE,
+        bak.OFFICEWORKFLAG,
+        bak.FULLTIMEFLAG,
+        bak.SALEJUDGE,
+        bak.SALESVCFLAG,
+        bak.CHANNEL,
+        bak.HIGHESTDEGREE,
+        bak.SALSTARTDATE,
+        bak.SALENDDATE,
+        bak.EMPLOYDATE,
+        bak.OUTWORKDATE,
+        bak.UPAGENTNUM,
+        bak.BANK,
+        bak.CARDNUM,
+        bak.CARDNAME,
+        bak.BXJGDM,
+        bak.BXJGMC,
+        bak.SSFZJGDM,
+        bak.SSQDXX,
+        bak.ZYJSZG,
+        bak.WGWJJL,
+        bak.GWRZXX,
+        bak.AGENTNUM,
+        bak.HTLX,
+        bak.VIRTUALFLAY,
+        bak.MANAGECOM,
+        bak.CITY,
+        bak.AGENTSTATUS,
+        bak.EMPLOYMONTH,
+        bak.OUTWORKMONTH,
+        bak.JOINTHEPARTYDATE,
+        bak.POLITYVISAGE,
+        bak.NATIONALITY,
+        bak.GRADETYPE,
+        bak.MAKEDATE,
+        bak.MAKETIME,
+        bak.MODIFYDATE,
+        bak.MODIFYTIME,
+        bak.OPERATOR
+        )
+        select
+        to_char(createmaxno('TMAGENTINFOTOZBXBAK', 'SN'), 'fm0000000000') as BAKSN,
+        tm.AGENTSN,
+        tm.NAME,
+        tm.SEX,
+        tm.BIRTHDAY,
+        tm.QUAFNO,
+        tm.QUAFSTARTDATE,
+        tm.QUAFENDDATE,
+        tm.SALNO,
+        tm.AGENTSIGNFLAG,
+        tm.IDTYPE,
+        tm.IDNO,
+        tm.MOBILE,
+        tm.OFFICEWORKFLAG,
+        tm.FULLTIMEFLAG,
+        tm.SALEJUDGE,
+        tm.SALESVCFLAG,
+        tm.CHANNEL,
+        tm.HIGHESTDEGREE,
+        tm.SALSTARTDATE,
+        tm.SALENDDATE,
+        tm.EMPLOYDATE,
+        tm.OUTWORKDATE,
+        tm.UPAGENTNUM,
+        tm.BANK,
+        tm.CARDNUM,
+        tm.CARDNAME,
+        tm.BXJGDM,
+        tm.BXJGMC,
+        tm.SSFZJGDM,
+        tm.SSQDXX,
+        tm.ZYJSZG,
+        tm.WGWJJL,
+        tm.GWRZXX,
+        tm.AGENTNUM,
+        tm.HTLX,
+        tm.VIRTUALFLAY,
+        tm.MANAGECOM,
+        tm.CITY,
+        tm.AGENTSTATUS,
+        tm.EMPLOYMONTH,
+        tm.OUTWORKMONTH,
+        tm.JOINTHEPARTYDATE,
+        tm.POLITYVISAGE,
+        tm.NATIONALITY,
+        tm.GRADETYPE,
+        tm.MAKEDATE,
+        tm.MAKETIME,
+        tm.MODIFYDATE,
+        tm.MODIFYTIME,
+        tm.OPERATOR
+        from tmagentinfotozbx tm
+        where exists (
+        select 1
+        from tmagenttrajectory a,
+        laagent b,
+        laagentinfo c,
+        tmmanagecom d
+        where a.agentcode = b.agentcode
+        and a.agentsn = c.agentsn
+        and a.agentcode = c.agentcode
+        and b.managecom = d.managecom
+        and b.branchtype = '1'
+        and tm.agentsn = c.agentsn
+        and a.trajectorysn = (
+        SELECT max(tm.trajectorysn)
+        FROM tmagenttrajectory tm
+        where tm.agentcode = a.agentcode
+        and a.agentsn = tm.agentsn
+        )
+        and (
+        a.makedate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or b.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or c.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+        )
+    </insert>
+
+    <update id="mergeTmAgentInfoToZbx">
+        merge into tmagentinfotozbx tm
+        using (
+
+        select distinct trim(replace(a.agentsn, chr(10), '')) as agentsn ,
+        trim(replace(b.surname || b.name,chr(10), '')) as sname,
+        decode(b.sex, 'M', '1', 'F', '2', '9') as sex,
+        b.birthday,
+        trim(replace(b.quafno, chr(10), '')) as quafno,
+        b.quafstartdate,
+        b.quafenddate,
+        trim(replace(b.salno, chr(10), '')) as salno ,
+        decode(c.postsign, '虚拟账号', '990', '111') as idtype ,
+        nvl(trim(replace(b.idno, chr(10), '')), '未记录') as idno,
+        trim(replace(b.mobile, chr(10), '')) as mobile ,
+        case
+        when c.postsign = '虚拟账号' then '99'
+        when c.contracttype in ('P','A') then '02'
+        else '03'
+        end agentsignflag ,
+        decode(c.contracttype, 'A', 'Y', 'P', 'Y', 'N') as officeworkflag,
+        'Y' as fulltimeflag,
+        trim(replace(b.salejudge, chr(10), '')) as salejudge,
+        nvl(b.salesvcflag, '1') salesvcflag,
+        decode(c.postsign, '虚拟账号', 'Y', 'N') as virtualflay,
+        b.agentnum,
+        b.managecom,
+        d.REPORTSCITY as city,
+        c.channel,
+        decode(b.degree,'01','07','02','06','03','05','04','05','05','05','06','04','07','03','08','02','09','01','99')
+        as highestdegree,
+        b.SALSTARTDATE,
+        coalesce(c.PRACTICEOUTDATE, b.SALENDDATE, date'9999-12-31') as SALENDDATE,
+        decode(b.AGENTSTATE, '03', b.OUTWORKDATE, date'9999-12-31') as OUTWORKDATE,
+        b.EMPLOYDATE,
+        nvl((SELECT H.agentnum FROM laagent H WHERE H.AGENTCODE = e.BRANCHMANAGER), 0) as UPAGENTNUM,
+        c.BANK,
+        c.CARDNUM,
+        (trim(replace(b.surname || b.name, chr(10), ''))) as CARDNAME,
+        '000054' as BXJGDM,
+        '招商信诺人寿保险有限公司' as BXJGMC,
+        '000054' as SSFZJGDM,
+        c.CONTRACTTYPE as HTLX,
+        b.AGENTSTATE as AGENTSTATUS,
+        to_char(b.EMPLOYDATE, 'YYYYMM') as EMPLOYMONTH,
+        to_char(decode(b.AGENTSTATE, '03', b.OUTWORKDATE, date'9999-12-31'), 'YYYYMM') as OUTWORKMONTH,
+        nvl(c.skilllevel, '其他') as ZYJSZG,
+        (
+        SELECT la.noti
+        FROM ldcode ld,laagentgrade la
+        where c.GRADETYPE = ld.code
+        and la.gradecode = ld.codename
+        and ld.codetype = 'agentgradetype'
+        ) GRADETYPE,
+        b.NATIONALITY,
+        b.POLITYVISAGE,
+        c.JOINTHEPARTYDATE,
+        c.SKILLLEVEL
+        from tmagenttrajectory a, laagent b, laagentinfo c ,tmmanagecom d, tmbranchgroup e
+        where a.agentcode = b.agentcode
+        and a.agentsn = c.agentsn(+)
+        and b.agentgroup = e.agentgroup
+        and a.agentcode= c.agentcode(+)
+        and b.managecom= d.managecom(+)
+        and b.branchtype = '1'
+        and e.branchlevel = '02'
+        and a.trajectorysn = (
+        SELECT max(tm.trajectorysn)
+        FROM tmagenttrajectory tm
+        where tm.agentcode = a.agentcode
+        and tm.agentsn = a.agentsn
+        )
+        and (
+        a.makedate= to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or b.modifydate= to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or c.modifydate= to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+        ) info on (tm.agentsn= info.agentsn)
+        when matched then
+        update set
+        tm.NAME= info.SNAME,
+        tm.SEX = info.SEX,
+        tm.BIRTHDAY= info.BIRTHDAY,
+        tm.QUAFNO= info.QUAFNO,
+        tm.QUAFSTARTDATE= info.QUAFSTARTDATE,
+        tm.QUAFENDDATE= info.QUAFENDDATE,
+        tm.SALNO= info.SALNO,
+        tm.agentsignflag= info.agentsignflag,
+        tm.IDTYPE= info.IDTYPE,
+        tm.IDNO = info.IDNO,
+        tm.MOBILE= info.MOBILE,
+        tm.officeworkflag= info.officeworkflag,
+        tm.FULLTIMEFLAG= info.FULLTIMEFLAG,
+        tm.salejudge= info.salejudge,
+        tm.salesvcflag= info.salesvcflag,
+        tm.VIRTUALFLAY= info.VIRTUALFLAY,
+        tm.agentnum= info.agentnum,
+        tm.managecom= info.managecom,
+        tm.city= info.city,
+        tm.channel= info.channel,
+        tm.highestdegree= info.highestdegree,
+        tm.salstartdate= info.salstartdate,
+        tm.salenddate= info.salenddate,
+        tm.outworkdate= info.outworkdate,
+        tm.employdate= info.employdate,
+        tm.upagentnum= info.upagentnum,
+        tm.bank= info.bank,
+        tm.cardnum= info.cardnum,
+        tm.cardname= info.cardname,
+        tm.bxjgdm= info.bxjgdm,
+        tm.bxjgmc= info.bxjgmc,
+        tm.SSFZJGDM= info.SSFZJGDM,
+        tm.htlx= info.htlx,
+        tm.agentstatus = info.agentstatus,
+        tm.employmonth= info.employmonth,
+        tm.outworkmonth= info.outworkmonth,
+        tm.zyjszg= info.zyjszg,
+        tm.gradetype = info.gradetype,
+        tm.nationality = info.nationality,
+        tm.polityvisage = info.polityvisage,
+        tm.jointhepartydate = info.jointhepartydate,
+        tm.OPERATOR = 'batch',
+        tm.modifydate= basic.CurrentDate,
+        tm.modifytime= basic.CurrentTime
+        WHEN NOT MATCHED THEN
+        insert (
+        tm.AGENTSN,
+        tm.NAME,
+        tm.SEX,
+        tm.BIRTHDAY,
+        tm.QUAFNO,
+        tm.QUAFSTARTDATE,
+        tm.QUAFENDDATE,
+        tm.SALNO,
+        tm.agentsignflag,
+        tm.IDTYPE,
+        tm.IDNO,
+        tm.MOBILE,
+        tm.officeworkflag,
+        tm.FULLTIMEFLAG,
+        tm.salejudge,
+        tm.salesvcflag,
+        tm.VIRTUALFLAY,
+        tm.AGENTNUM,
+        tm.managecom ,
+        tm.city ,
+        tm.channel ,
+        tm.highestdegree ,
+        tm.salstartdate ,
+        tm.salenddate ,
+        tm.outworkdate ,
+        tm.employdate ,
+        tm.upagentnum ,
+        tm.bank,
+        tm.cardnum ,
+        tm.cardname ,
+        tm.bxjgdm ,
+        tm.bxjgmc ,
+        tm.Ssfzjgdm,
+        tm.htlx ,
+        tm.agentstatus ,
+        tm.employmonth ,
+        tm.outworkmonth ,
+        tm.zyjszg ,
+        tm.gradetype ,
+        tm.nationality ,
+        tm.polityvisage ,
+        tm.jointhepartydate ,
+        tm.operator ,
+        tm.makedate,
+        tm.maketime,
+        tm.modifydate,
+        tm.modifytime)
+        values( info.AGENTSN,
+        info.SNAME,
+        info.SEX,
+        info.BIRTHDAY,
+        info.QUAFNO,
+        info.QUAFSTARTDATE,
+        info.QUAFENDDATE,
+        info.SALNO,
+        info.agentsignflag,
+        info.IDTYPE,
+        info.IDNO,
+        info.MOBILE,
+        info.officeworkflag,
+        info.FULLTIMEFLAG,
+        info.salejudge,
+        info.salesvcflag,
+        info.VIRTUALFLAY,
+        info.agentnum,
+        info.managecom ,
+        info.CITY ,
+        info.channel,
+        info.highestdegree,
+        info.salstartdate,
+        info.salenddate,
+        info.outworkdate,
+        info.employdate,
+        info.upagentnum,
+        info.bank,
+        info.cardnum,
+        info.cardname ,
+        info.bxjgdm ,
+        info.bxjgmc ,
+        info.Ssfzjgdm,
+        info.htlx ,
+        info.agentstatus ,
+        info.employmonth ,
+        info.outworkmonth ,
+        info.zyjszg ,
+        info.gradetype,
+        info.nationality,
+        info.polityvisage,
+        info.jointhepartydate,
+        'batch',
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime
+        )
+    </update>
+
+    <update id="updateTmAgentInfoToZbx">
+        update TMAGENTINFOTOZBX a
+        set (
+        a.agentstatus,
+        a.employmonth,
+        a.employdate,
+        a.outworkmonth,
+        a.outworkdate,
+        a.nationality,
+        a.polityvisage,
+        a.jointhepartydate,
+        a.zyjszg
+        )
+        =
+        (
+        SELECT
+        b.agentstate,
+        to_char(b.employdate, 'YYYYMM'),
+        b.employdate,
+        decode(b.agentstate, '01', '999912', '02', '999912', '03', d.dimissionmonth, '999912'),
+        decode(b.agentstate, '01', date'9999-12-31', '02', date'9999-12-31', '03', d.dimissiondate, date'9999-12-31'),
+        b.nationality,
+        b.polityvisage,
+        c.jointhepartydate,
+        nvl(c.skilllevel, '其他') as SKILLLEVEL
+        FROM laagent b, laagentinfo c, TMDIMISSION d
+        where a.agentnum = b.agentnum
+        and b.agentcode = c.agentcode
+        and b.agentcode = d.agentcode(+)
+        and b.branchtype = '1'
+        and (
+        b.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or c.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+        )
+        where exists (
+        SELECT 1
+        FROM tmagenttrajectory e, laagent f, laagentinfo g
+        where e.agentcode = f.agentcode
+        and f.agentcode = g.agentcode
+        and f.branchtype = '1'
+        and (
+        f.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        OR g.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+        and e.agentsn = a.agentsn
+        )
+    </update>
+
+    <sql id="PushDataWhere">
+        AND (a.MODIFYDATE = basic.CurrentDate or a.MAKEDATE = basic.CurrentDate)
+    </sql>
+
+    <select id="checkDataList" resultType="java.lang.String">
+        select '该员工的身份证号码对应不同的员工姓名！'
+        from TMAGENTINFOTOZBX a, TMAGENTINFOTOZBX b
+        where a.agentsn != b.agentsn
+        and a.name != b.name
+        and a.idno = b.idno
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select '该员工的解约日期早于签约日期！'
+        from TMAGENTINFOTOZBX a
+        where a.employdate > a.outworkdate
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select '该员工的执业证注销/到期日期早于执业证发放日期！'
+        from TMAGENTINFOTOZBX a
+        where a.salstartdate > a.salenddate
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select '该员工的执业证发放日期早于签约日期！'
+        from TMAGENTINFOTOZBX a
+        where a.employdate > a.salstartdate
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select '该员工的执业证注销/到期日期早于解约日期！'
+        from TMAGENTINFOTOZBX a
+        where a.outworkdate > a.salenddate
+
+        union all
+
+        select '该员工的劳动合同对应的为合同类型为非招商信诺'
+        from TMAGENTINFOTOZBX a
+        where a.agentsignflag = '02'
+        and a.htlx not in ('A', 'P')
+        and a.htlx is not null
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select '该员工的劳务合同对应的为合同类型为招商信诺' from TMAGENTINFOTOZBX a
+        where a.agentsignflag = '03'
+        and a.htlx in ('A', 'P')
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select
+        '该员工的合同类型为非 “招商信诺”对应的内勤标识为Y'
+        from TMAGENTINFOTOZBX a
+        where a.OFFICEWORKFLAG = 'Y'
+        and a.htlx not in ('A', 'P')
+        and a.htlx is not null
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select
+        '该员工的合同类型为 “招商信诺”对应的内勤标识为N'
+        from TMAGENTINFOTOZBX a
+        where a.OFFICEWORKFLAG = 'N'
+        and a.htlx in ('A', 'P')
+        <include refid="PushDataWhere"/>
+
+        union all
+
+        select '该员工的轨迹在银保监销售人员上报数据缺失'
+        from tmagenttrajectory a
+        where a.makedate <![CDATA[>=]]> to_date('2020-01-01','YYYY-MM-DD')
+        and not exists (select 1 from TMAGENTINFOTOZBX b where a.agentsn = b.agentsn)
+        <include refid="PushDataWhere"/>
+    </select>
+
+    <sql id="TmAgentInfoToZbxColumn2">
+        t.AGENTSN,
+        t.NAME,
+        t.QUAFNO,
+        t.QUAFSTARTDATE as QUAFSTARTDATE,
+        t.QUAFENDDATE as QUAFENDDATE,
+        t.SALNO,
+        t.AGENTSIGNFLAG as AGENTSIGNFLAG,
+        t.idtype as IDTYPE,
+        t.idno as IDNO,
+        t.AGENTNUM,
+        t.MANAGECOM as MANAGECOM,
+        t.CITY,
+        t.AGENTSTATE as AGENTSTATE,
+        t.SALSTARTDATE as SALSTARTDATE,
+        t.SALENDDATE as SALENDDATE,
+        t.EMPLOYDATE2 as EMPLOYDATE2,
+        t.OUTWORKDATE2 as OUTWORKDATE2,
+        t.contracttype as CONTRACTTYPE
+    </sql>
+
+    <sql id="TmAgentInfoToZbxColumn">
+        a.AGENTSN,
+        a.NAME,
+        a.QUAFNO,
+        to_char(a.QUAFSTARTDATE, 'yyyy-mm-dd') as QUAFSTARTDATE,
+        to_char(a.QUAFENDDATE, 'yyyy-mm-dd') as QUAFENDDATE,
+        a.SALNO,
+        (
+        select b.codename
+        from ldcode b
+        where b.codetype = 'agentsignflagtype'
+        and b.code = a.AGENTSIGNFLAG
+        ) as AGENTSIGNFLAG,
+        (
+        SELECT b.codename
+        FROM ldcode b
+        where b.codetype = 'jg_zjlx'
+        and b.code = a.idtype
+        ) as IDTYPE,
+        decode(a.idno, '未记录', a.idno, substr(a.idno, 0, 12) || '****') as IDNO,
+        a.AGENTNUM,
+        (
+        select b.shortname
+        from tmmanagecom b
+        where b.MANAGECOM = a.MANAGECOM
+        ) as MANAGECOM,
+        a.CITY,
+        (
+        select c.codename
+        from ldcode c
+        where c.codetype = 'tmagentstate'
+        and c.code = a.AGENTSTATUS
+        ) as AGENTSTATE,
+        to_char(a.SALSTARTDATE, 'yyyy-mm-dd') as SALSTARTDATE,
+        to_char(a.SALENDDATE, 'yyyy-mm-dd') as SALENDDATE,
+        to_char(a.EMPLOYDATE, 'yyyy-mm-dd') as EMPLOYDATE2,
+        to_char(a.OUTWORKDATE, 'yyyy-mm-dd') as OUTWORKDATE2,
+        (
+        SELECT a.codename
+        FROM ldcode a
+        where a.codetype = 'contracttype'
+        and a.code = a.htlx
+        ) as CONTRACTTYPE,
+    </sql>
+
+    <sql id="where">
+        AND (a.MODIFYDATE = basic.CurrentDate or a.MAKEDATE = basic.CurrentDate)
+    </sql>
+
+    <select id="selectTmAgentInfoToZbxExcelList" resultType="java.util.Map">
+        SELECT distinct T.msg,
+        <include refid="TmAgentInfoToZbxColumn2"/>
+        FROM (
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工的身份证号码，对应不同的员工姓名！' as msg
+        from TMAGENTINFOTOZBX a, TMAGENTINFOTOZBX b
+        where a.agentsn != b.agentsn
+        and a.name != b.name
+        and a.idno = b.idno
+        and a.idno is not null
+        and a.idno not like '%未记录%'
+        and a.virtualflay != 'Y'
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工的解约日期早于签约日期！' as msg
+        from TMAGENTINFOTOZBX a
+        where a.employdate > a.outworkdate
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工的执业证注销/到期日期早于执业证发放日期！'as msg
+        from TMAGENTINFOTOZBX a
+        where a.salstartdate > a.salenddate
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工的执业证发放日期早于签约日期！' as msg
+        from TMAGENTINFOTOZBX a
+        where a.employdate > a.salstartdate
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工的执业证注销/到期日期早于解约日期！' as msg
+        from TMAGENTINFOTOZBX a
+        where a.outworkdate > a.salenddate
+        and a.agentstatus != '01'
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工的“劳动合同”对应的为合同类型为非“招商信诺”' as msg
+        from TMAGENTINFOTOZBX a
+        where a.agentsignflag = '02'
+        and a.htlx not in ('A', 'P')
+        and a.htlx is not null
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工“劳务合同”对应的为合同类型为 “招商信诺”' as msg
+        from TMAGENTINFOTOZBX a
+        where a.agentsignflag = '03'
+        and a.htlx in ('A', 'P')
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工合同类型为非 “招商信诺”对应的内勤标识为Y' as msg
+        from TMAGENTINFOTOZBX a
+        where a.OFFICEWORKFLAG = 'Y'
+        and a.htlx not in ('A', 'P')
+        and a.htlx is not null
+        <include refid="where"/>
+
+        union all
+
+        select
+        <include refid="TmAgentInfoToZbxColumn"/>
+        '该员工合同类型为 “招商信诺”对应的内勤标识为N' as msg
+        from TMAGENTINFOTOZBX a
+        where a.OFFICEWORKFLAG = 'N'
+        and a.htlx in ('A','P')
+        <include refid="where"/>
+
+        union all
+
+        select a.AGENTSN,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '该员工工号在银保监销售人员上报数据缺失' as msg
+        from tmagenttrajectory a
+        where a.makedate <![CDATA[>=]]> to_date('2020-01-01', 'YYYY-MM-DD')
+        <include refid="where"/>
+        and not exists (select 1 from TMAGENTINFOTOZBX b where a.agentsn = b.agentsn)
+
+        ) T
+    </select>
+
+    <insert id="insertJgEmployeeInfoB">
+        insert into JG_EMPLOYEEINFOB
+        SELECT
+        to_char(createmaxno('TMJGZJJGB', 'SN'), 'fm0000000000'),
+        d.AGENTNUM,
+        d.ZJJGCODE,
+        d.ZJJGMC,
+        d.SSFJJJDM,
+        d.AGENTNAME,
+        d.SEX,
+        d.NATIONALITY,
+        d.BIRTHDAY,
+        d.POLITYVISAGE,
+        d.JOINTHEPARTYDATE,
+        d.IDTYPE,
+        d.IDNO,
+        d.MOBILE,
+        d.HIGHESTDEGREE,
+        d.SKILLLEVEL,
+        d.DJGBZ,
+        d.YGGW,
+        d.EMPLOYDATE,
+        d.OUTWORKDATE,
+        d.HTTYPE,
+        d.CITY,
+        d.AREA,
+        d.MANAGECOM,
+        d.GWBS,
+        d.MAKEDATE,
+        d.MAKETIME,
+        d.MODIFYDATE,
+        d.MODIFYTIME,
+        d.OPERATOR,
+        d.agentstate
+        FROM JG_EMPLOYEEINFO d
+        where exists (
+        SELECT 1
+        FROM laagent a, laagentinfo b, laagentgrade c
+        where a.agentcode = b.agentcode
+        and b.postenname = c.gradecode
+        and a.agentnum = d.agentnum
+        and (
+        a.modifydate = to_date(#{mDate,jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or b.modifydate = to_date(#{mDate,jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+        )
+    </insert>
+
+    <update id="mergeJgEmployeeInfo">
+        merge into JG_EMPLOYEEINFO t
+        using (
+
+        SELECT '000054' as ZJJGCODE,
+        '招商信诺人寿保险有限公司' as ZJJGMC,
+        a.agentnum as agentnum,
+        '000054' as SSFJJJDM,
+        trim(replace(a.surname || a.name, chr(10), '')) as AGENTNAME,
+        decode(a.sex, 'M', '1', 'F', '2', '9') as sex,
+        a.nationality as nationality,
+        nvl(a.birthday, date '1990-01-01') as birthday,
+        nvl(a.polityvisage, '13') as polityvisage,
+        nvl(to_char(b.jointhepartydate, 'YYYYMM'), '999912') as jointhepartydate,
+        decode(a.idtype,
+        '1', '111',
+        '2', '118',
+        '3', '414',
+        '4', '117',
+        '5', '990',
+        '6', '516',
+        '7', '113',
+        '8', '123',
+        '9', '990',
+        '990') as idtype,
+        nvl(a.idno, '未记录') as idno,
+        nvl(a.mobile, '未记录') as mobile,
+        decode(a.degree,
+        '01', '07',
+        '02', '06',
+        '03', '05',
+        '04', '05',
+        '05', '05',
+        '06', '04',
+        '07', '03',
+        '08', '02',
+        '09', '01',
+        '99') as highestdegree,
+        '其他' as SKILLLEVEL,
+        '员工' as DJGBZ,
+        c.noti as YGGW,
+        nvl(a.employdate, date'1990-01-01') as EMPLOYDATE,
+        nvl(a.outworkdate, date'9999-12-31') as OUTWORKDATE,
+        b.contracttype as HTTYPE,
+        (
+        SELECT d.REPORTSCITY
+        FROM tmmanagecom d
+        where d.managecom = a.managecom
+        ) as city,
+        (
+        SELECT d.REPORTSREGION
+        FROM tmmanagecom d
+        where d.managecom = a.managecom
+        ) as AREA,
+        (
+        SELECT d.shortname
+        FROM tmmanagecom d
+        where d.managecom = a.managecom
+        ) as managecom,
+        b.postsign as GWBS,
+        (select b.codename from ldcode b where a.agentstate = b.code and b.codetype = 'tmagentstate') as agentstate
+        FROM laagent a, laagentinfo b, laagentgrade c,tmdimission d
+        where a.agentcode = b.agentcode
+        and a.agentcode = d.agentcode(+)
+        and b.postenname = c.gradecode
+        and (c.noti in ('TMR', 'TMS') or c.gradecode in ('ACCM', 'ACCM(P)'))
+        and (b.postsign not like '%虚拟账号%' or b.postsign is null)
+        and (a.agentstate = '01' or (a.agentstate = '03' and d.DIMISSIONDATE >= date'2017-01-01'))
+        and b.contracttype in ('A', 'D', 'E')
+        and (
+        a.modifydate = to_date(#{mDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        or b.modifydate = to_date(#{mDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+        ) info on (info.agentnum = t.agentnum)
+        when matched then
+        update set
+        t.ZJJGCODE = info.ZJJGCODE,
+        t.ZJJGMC = info.ZJJGMC,
+        t.SSFJJJDM = info.SSFJJJDM,
+        t.AGENTNAME = info.AGENTNAME,
+        t.SEX = info.SEX,
+        t.NATIONALITY = info.NATIONALITY,
+        t.BIRTHDAY = info.BIRTHDAY,
+        t.POLITYVISAGE = info.POLITYVISAGE,
+        t.JOINTHEPARTYDATE = info.JOINTHEPARTYDATE,
+        t.IDTYPE = info.IDTYPE,
+        t.IDNO = info.IDNO,
+        t.MOBILE = info.MOBILE,
+        t.HIGHESTDEGREE = info.HIGHESTDEGREE,
+        t.SKILLLEVEL = info.SKILLLEVEL,
+        t.DJGBZ = info.DJGBZ,
+        t.YGGW = info.YGGW,
+        t.EMPLOYDATE = info.EMPLOYDATE,
+        t.OUTWORKDATE = info.OUTWORKDATE,
+        t.HTTYPE = info.HTTYPE,
+        t.CITY = info.CITY,
+        t.AREA = info.AREA,
+        t.MANAGECOM = info.MANAGECOM,
+        t.GWBS = info.GWBS,
+        t.agentstate = info.agentstate,
+        t.MODIFYDATE = basic.CurrentDate,
+        t.MODIFYTIME = basic.CurrentTime,
+        t.OPERATOR = 'batch'
+        when not matched then
+        insert (
+        t.AGENTNUM,
+        t.ZJJGCODE,
+        t.ZJJGMC,
+        t.SSFJJJDM,
+        t.AGENTNAME,
+        t.SEX,
+        t.NATIONALITY,
+        t.BIRTHDAY,
+        t.POLITYVISAGE,
+        t.JOINTHEPARTYDATE,
+        t.IDTYPE,
+        t.IDNO,
+        t.MOBILE,
+        t.HIGHESTDEGREE,
+        t.SKILLLEVEL,
+        t.DJGBZ,
+        t.YGGW,
+        t.EMPLOYDATE,
+        t.OUTWORKDATE,
+        t.HTTYPE,
+        t.CITY,
+        t.AREA,
+        t.MANAGECOM,
+        t.GWBS,
+        t.agentstate,
+        t.MAKEDATE,
+        t.MAKETIME,
+        t.MODIFYDATE,
+        t.MODIFYTIME,
+        t.OPERATOR
+        )
+        values
+        (
+        info.AGENTNUM,
+        info.ZJJGCODE,
+        info.ZJJGMC,
+        info.SSFJJJDM,
+        info.AGENTNAME,
+        info.SEX,
+        info.NATIONALITY,
+        info.BIRTHDAY,
+        info.POLITYVISAGE,
+        info.JOINTHEPARTYDATE,
+        info.IDTYPE,
+        info.IDNO,
+        info.MOBILE,
+        info.HIGHESTDEGREE,
+        info.SKILLLEVEL,
+        info.DJGBZ,
+        info.YGGW,
+        info.EMPLOYDATE,
+        info.OUTWORKDATE,
+        info.HTTYPE,
+        info.CITY,
+        info.AREA,
+        info.MANAGECOM,
+        info.GWBS,
+        info.AGENTSTATE,
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime,
+        'batch'
+        )
+    </update>
+
+    <select id="interceptData" resultType="java.lang.String">
+        SELECT '虚拟标识是虚拟账号，已进行拦截，请修改数据，再在页面进行推送'
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.GWBS like '%虚拟账号%'
+
+        union all
+
+        SELECT '人员状态存在有“Transfer”、“其他”，已进行拦截，请修改数据，再在页面进行推送'
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.Agentstate in ('02', '04')
+
+        union all
+
+        SELECT '合同类型存在有“招商信诺”、“前程无忧派遣-招商信诺-CEB”、“前程无忧派遣-招商信诺-CITIC”以外的其他合同类型，已进行拦截，请修改数据，再在页面进行推送'
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.Httype not in ('A', 'D', 'E')
+
+        union all
+
+        SELECT '岗位存在非“TMR、TMS”，已进行拦截，请修改数据，再在页面进行推送'
+        FROM JG_EMPLOYEEINFO A, laagentgrade C
+        WHERE A.YGGW = C.GRADENAME
+        AND C.NOTI NOT IN ('TMR', 'TMS')
+
+        UNION ALL
+
+        SELECT
+        '保险机构代码、保险机构名称、员工代码、所属分支机构代码、员工姓名、性别、民族、出生日期、证件类型、证件号码、政治面貌、联系电话、学历、董监高标志、岗位、入司日期、离司日期任一字段为空，已进行拦截，请修改数据，再在页面进行推送'
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.ZJJGCODE IS NULL
+        OR A.ZJJGMC IS NULL
+        OR A.AGENTNUM IS NULL
+        OR A.SSFJJJDM IS NULL
+        OR A.AGENTNAME IS NULL
+        OR A.SEX IS NULL
+        OR A.NATIONALITY IS NULL
+        OR A.BIRTHDAY IS NULL
+        OR A.IDTYPE IS NULL
+        OR A.IDNO IS NULL
+        OR A.IDNO IS NULL
+        OR A.POLITYVISAGE IS NULL
+        OR A.MOBILE IS NULL
+        OR A.HIGHESTDEGREE IS NULL
+        OR A.DJGBZ IS NULL
+        OR A.YGGW IS NULL
+        OR A.EMPLOYDATE IS NULL
+        OR A.OUTWORKDATE IS NULL
+    </select>
+
+    <sql id="JgEmployeeInfoColumn">
+        AGENTNUM, ZJJGCODE, ZJJGMC, SSFJJJDM, AGENTNAME, decode(sex, '1', '男', '2', '女', '未知') as SEX,
+        (SELECT b.codename FROM ldcode b where b.codetype = 'nationality' and b.code = A.NATIONALITY) as NATIONALITY,
+        to_char(BIRTHDAY,'yyyy-MM-dd') as BIRTHDAY,
+        (SELECT b.codename FROM ldcode b where b.codetype = 'polityvisage' and b.code = A.POLITYVISAGE) as POLITYVISAGE,
+        JOINTHEPARTYDATE as JOINTHEPARTYDATE,
+        (SELECT b.codename FROM ldcode b where b.codetype = 'jg_zjlx' and b.code = A.IDTYPE) as IDTYPE,
+        substr(idno,0,12) || '****' as IDNO, substr(MOBILE,0,6) || '****' as MOBILE,
+        (SELECT b.codename FROM ldcode b where b.codetype = 'jg_xl' and b.code = A.HIGHESTDEGREE) as HIGHESTDEGREE,
+        SKILLLEVEL, DJGBZ, YGGW, to_char(EMPLOYDATE,'yyyy-MM-dd') as EMPLOYDATE,
+        to_char(OUTWORKDATE,'yyyy-MM-dd') as OUTWORKDATE,
+        (SELECT b.codename FROM ldcode b where b.codetype = 'contracttype' and b.code = A.HTTYPE) as HTTYPE, CITY, AREA,
+        MANAGECOM, GWBS,AGENTSTATE,
+    </sql>
+
+    <select id="selectJgEmployeeInfoExcelList" resultType="java.util.Map">
+        SELECT
+        <include refid="JgEmployeeInfoColumn"/>
+        '该员工的虚拟标识是虚拟账号，已进行拦截，请修改数据，再在页面进行推送' as msg
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.GWBS like '%虚拟账号%'
+
+        union all
+
+        SELECT
+        <include refid="JgEmployeeInfoColumn"/>
+        '该员工的的人员状态存在有“Transfer”、“其他”，已进行拦截，请修改数据，再在页面进行推送' as msg
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.Agentstate in ('02', '04')
+
+        union all
+
+        SELECT
+        <include refid="JgEmployeeInfoColumn"/>
+        '该员工的合同类型存在有“招商信诺”、“前程无忧派遣-招商信诺-CEB”、“前程无忧派遣-招商信诺-CITIC”以外的其他合同类型，已进行拦截，请修改数据，再在页面进行推送' as msg
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.Httype not in ('A', 'D', 'E')
+
+        union all
+
+        SELECT
+        <include refid="JgEmployeeInfoColumn"/>
+        '该员工的岗位存在非“TMR、TMS”，已进行拦截，请修改数据，再在页面进行推送' as msg
+        FROM JG_EMPLOYEEINFO A, laagentgrade C
+        WHERE A.YGGW = C.GRADENAME
+        AND C.NOTI NOT IN ('TMR', 'TMS')
+
+        UNION ALL
+
+        SELECT
+        <include refid="JgEmployeeInfoColumn"/>
+        '该员工的保险机构代码、保险机构名称、员工代码、所属分支机构代码、员工姓名、性别、民族、出生日期、证件类型、证件号码、政治面貌、联系电话、学历、董监高标志、岗位、入司日期、离司日期任一字段为空，已进行拦截，请修改数据，再在页面进行推送'
+        as msg
+        FROM JG_EMPLOYEEINFO A
+        WHERE A.ZJJGCODE IS NULL
+        OR A.ZJJGMC IS NULL
+        OR A.AGENTNUM IS NULL
+        OR A.SSFJJJDM IS NULL
+        OR A.AGENTNAME IS NULL
+        OR A.SEX IS NULL
+        OR A.NATIONALITY IS NULL
+        OR A.BIRTHDAY IS NULL
+        OR A.IDTYPE IS NULL
+        OR A.IDNO IS NULL
+        OR A.IDNO IS NULL
+        OR A.POLITYVISAGE IS NULL
+        OR A.MOBILE IS NULL
+        OR A.HIGHESTDEGREE IS NULL
+        OR A.DJGBZ IS NULL
+        OR A.YGGW IS NULL
+        OR A.EMPLOYDATE IS NULL
+        OR A.OUTWORKDATE IS NULL
+    </select>
+
+    <select id="countTmAgentTrajectoryByPushDate" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM tmagenttrajectory a, tmagenttrajectory b
+        where a.trajectorysn != b.trajectorysn
+        and a.agentsn = b.agentsn
+        and a.agentnum != b.agentnum
+        and (
+        a.makedate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        OR
+        a.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+    </select>
+
+    <select id="selectTmAgentTrajectoryByPushDate" resultType="java.util.Map">
+        SELECT
+        a.AGENTNUM,
+        (
+        SELECT c.SHORTNAME
+        FROM tmmanagecom c
+        where c.managecom = a.managecom
+        ) as MANAGECOM,
+        a.AGENTSN,
+        '同一个员工工号对应不同的员工编号' as MSG
+        FROM tmagenttrajectory a, tmagenttrajectory b
+        where a.trajectorysn != b.trajectorysn
+        and a.agentsn = b.agentsn
+        and a.agentnum != b.agentnum
+        and (
+        a.makedate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        OR a.modifydate = to_date(#{pushDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        )
+    </select>
+
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmCommissionInfoToOaMapper">
+
+    <select id="selectTmWageLog" resultType="java.lang.Integer">
+        select count(1)
+        from tmwagelog a
+        where a.enddate = trunc(sysdate - 1)
+        <if test="flag == '11'.toString()">
+            and a.state &lt;> '11'
+        </if>
+    </select>
+
+    <select id="dealCommissionDetail" parameterType="java.util.Map" statementType="CALLABLE"
+            useCache="false">
+        <![CDATA[
+            {call pkg_tm_commission_to_oa.p_create_commissiondetail(
+                #{msg, mode=OUT, jdbcType=VARCHAR}
+            )}
+        ]]>
+    </select>
+
+    <select id="dealCommissionTraceOa" parameterType="java.util.Map" statementType="CALLABLE"
+            useCache="false">
+        <![CDATA[
+            {call pkg_tm_commission_to_oa.p_create_commissiontrace_oa(
+                #{msg, mode=OUT, jdbcType=VARCHAR}
+            )}
+        ]]>
+    </select>
+
+    <select id="dealTmCommissionInfoCountOa" parameterType="java.util.Map" statementType="CALLABLE"
+            useCache="false">
+        <![CDATA[
+            {call pkg_tm_commission_to_oa.p_create_TMCInfoCount_OA(
+                #{msg, mode=OUT, jdbcType=VARCHAR}
+            )}
+        ]]>
+    </select>
+
+</mapper>

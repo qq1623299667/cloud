@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentListEmailMapper">
+
+    <select id="countExcelList" resultType="java.lang.Integer">
+        with t1 as (
+        select a.agentnum as agentnum, c.shortname as managecom
+        from laagent a, laagentinfo b, tmmanagecom c
+        where a.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and b.gradetype in ('01', '02', '03', '04')
+        and a.managecom = c.managecom
+        and c.shortname in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+        and c.shortname = #{manageCom, jdbcType=VARCHAR}
+        and a.agentstate = '01'
+        and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+        union
+
+        select a.agentnum, c.shortname
+        from laagent a, laagentinfo b, tmmanagecom c, tmdimission e
+        where a.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and b.gradetype in ('01', '02', '03', '04')
+        and a.managecom = c.managecom
+        and a.agentcode = e.agentcode
+        and c.shortname in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+        and c.shortname = #{manageCom, jdbcType=VARCHAR}
+        and a.agentstate = '03'
+        and e.dimissionmonth = to_char(sysdate, 'yyyymm')
+        and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+        union
+
+        select a.agentnum, d.managecom
+        from laagent a, laagentinfo b, tmmanagecom c, tmbankagentsn d
+        where a.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and b.gradetype in ('01', '02', '03', '04')
+        and a.managecom = c.managecom
+        and d.agentnum = a.agentnum
+        and to_char(d.enddate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+        and d.managecom in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+        and d.managecom = #{manageCom, jdbcType=VARCHAR}
+        and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+        ), t2 as (
+
+        select a.agentnum as agentnum, a.sponsor as managecom
+        from agentinfo_hris a, tmhrisagenttype b
+        where a.postenname = b.agentgrade
+        and b.agenttype in ('行政', '培训师', '质检')
+        and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+        and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+        and a.agentstate = '在职'
+
+        union
+
+        select a.agentnum as agentnum, a.sponsor as managecom
+        from agentinfo_hris a, tmhrisagenttype b
+        where a.postenname = b.agentgrade
+        and b.agenttype in ('行政', '培训师', '质检')
+        and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+        and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+        and a.agentstate = '离职'
+        and to_char(a.dimissiondate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+
+        union
+
+        select a.agentnum as agentnum, a.sponsor as managecom
+        from agentinfo_hris a, tmhrisagenttype b, tmbankagentsn c
+        where a.postenname = b.agentgrade
+        and a.agentnum = c.agentnum
+        and a.sponsor = c.managecom
+        and b.agenttype in ('行政', '培训师', '质检')
+        and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+        and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+        and to_char(c.enddate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+
+        ) select (select count(*) from t1) + (select count(*) from t2) from dual
+    </select>
+
+    <select id="selectExcelList" resultType="java.util.Map">
+        <if test="sheet == 'sheet0'">
+            with t1 as (
+
+            select a.agentnum as agentnum, c.shortname as managecom
+            from laagent a, laagentinfo b, tmmanagecom c
+            where a.branchtype = '1'
+            and a.agentcode = b.agentcode
+            and b.gradetype in ('01', '02', '03', '04')
+            and a.managecom = c.managecom
+            and c.shortname in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and c.shortname = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '01'
+            and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+            union
+
+            select a.agentnum, c.shortname
+            from laagent a, laagentinfo b, tmmanagecom c, tmdimission e
+            where a.branchtype = '1'
+            and a.agentcode = b.agentcode
+            and b.gradetype in ('01', '02', '03', '04')
+            and a.managecom = c.managecom
+            and a.agentcode = e.agentcode
+            and c.shortname in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and c.shortname = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '03'
+            and e.dimissionmonth = to_char(sysdate, 'yyyymm')
+            and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+            union
+
+            select a.agentnum, d.managecom
+            from laagent a, laagentinfo b, tmmanagecom c, tmbankagentsn d
+            where a.branchtype = '1'
+            and a.agentcode = b.agentcode
+            and b.gradetype in ('01', '02', '03', '04')
+            and a.managecom = c.managecom
+            and d.agentnum = a.agentnum
+            and to_char(d.enddate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+            and d.managecom in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and d.managecom = #{manageCom, jdbcType=VARCHAR}
+            and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+            ),
+            t2 as (
+
+            select a.agentnum as agentnum, a.sponsor as managecom
+            from agentinfo_hris a, tmhrisagenttype b
+            where a.postenname = b.agentgrade
+            and b.agenttype in ('行政', '培训师', '质检')
+            and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '在职'
+
+            union
+
+            select a.agentnum as agentnum, a.sponsor as managecom
+            from agentinfo_hris a, tmhrisagenttype b
+            where a.postenname = b.agentgrade
+            and b.agenttype in ('行政', '培训师', '质检')
+            and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '离职'
+            and to_char(a.dimissiondate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+
+            union
+
+            select a.agentnum as agentnum, a.sponsor as managecom
+            from agentinfo_hris a, tmhrisagenttype b, tmbankagentsn c
+            where a.postenname = b.agentgrade
+            and a.agentnum = c.agentnum
+            and a.sponsor = c.managecom
+            and b.agenttype in ('行政', '培训师', '质检')
+            and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+            and to_char(c.enddate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+
+            ),
+            t3 as (
+
+            select decode(t1.managecom,
+            'CMB CC(WH)', '信诺武汉项目',
+            'CMB CC(CD)', '信诺成都项目',
+            'CMB CC(SH)', '上海信诺'
+            ) as managecom,
+            decode(b.GRADETYPE,
+            '01', '培训新人',
+            '02', 'TSR',
+            '03', '业务主任',
+            '04', '业务主任'
+            ) as posttype,
+            d.bankagentsn as agentsn,
+            a.surname || a.name as name,
+            to_char(nvl(d.startdate, a.employdate), 'yyyy-mm-dd') as employdate,
+            to_char(nvl(d.enddate, e.dimissiondate), 'yyyy-mm-dd') as dimissiondate,
+            a.idno as idno,
+            (
+            select wd11.codename
+            from ldcode wd11
+            where wd11.codetype = 'degree'
+            and wd11.code = a.degree
+            ) as Highestdegree,
+            a.mobile as mobile,
+            '前锦网络信息技术（上海）有限公司' as usetype,
+            a.salno as salno
+            from laagent a
+            inner join t1 on (a.agentnum = t1.agentnum)
+            inner join laagentinfo b on (a.agentcode = b.agentcode)
+            left join tmbankagentsn d on (a.agentnum = d.agentnum and t1.managecom = d.managecom)
+            left join tmdimission e on (a.agentcode = e.agentcode)
+
+            union all
+
+            select decode(aa.sponsor,
+            'CMB CC(WH)', '信诺武汉项目',
+            'CMB CC(CD)', '信诺成都项目',
+            'CMB CC(SH)', '上海信诺'
+            ) as managecom,
+            bb.agenttype as posttype,
+            cc.bankagentsn as agentsn,
+            aa.name as name,
+            to_char(nvl(cc.startdate, aa.employdate), 'yyyy-mm-dd') as employdate,
+            to_char(nvl(cc.enddate, aa.dimissiondate), 'yyyy-mm-dd') as dimissiondate,
+            aa.idno as idno,
+            aa.degree as Highestdegree,
+            aa.mobile as mobile,
+            '前锦网络信息技术（上海）有限公司' as usetype,
+            dd.salno
+            from agentinfo_hris aa
+            inner join t2 on (aa.agentnum = t2.agentnum and aa.sponsor = t2.managecom)
+            left join tmhrisagenttype bb on (aa.postenname = bb.agentgrade)
+            left join tmbankagentsn cc on (aa.agentnum = cc.agentnum and aa.sponsor = cc.managecom)
+            left join tmrecruitmentagent dd on (dd.agentnum = aa.agentnum)
+
+            ) select rownum, t3.* from t3
+        </if>
+
+        <if test="sheet == 'sheet1'">
+            with t1 as (
+            select a.agentnum as agentnum, c.shortname as managecom
+            from laagent a, laagentinfo b, tmmanagecom c
+            where a.branchtype = '1'
+            and a.agentcode = b.agentcode
+            and b.gradetype in ('01', '02', '03', '04')
+            and a.managecom = c.managecom
+            and c.shortname in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and c.shortname = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '01'
+            and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+            union
+
+            select a.agentnum, c.shortname
+            from laagent a, laagentinfo b, tmmanagecom c, tmdimission e
+            where a.branchtype = '1'
+            and a.agentcode = b.agentcode
+            and b.gradetype in ('01', '02', '03', '04')
+            and a.managecom = c.managecom
+            and a.agentcode = e.agentcode
+            and c.shortname in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and c.shortname = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '03'
+            and e.dimissionmonth = to_char(sysdate, 'yyyymm')
+            and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+            union
+
+            select a.agentnum, d.managecom
+            from laagent a, laagentinfo b, tmmanagecom c, tmbankagentsn d
+            where a.branchtype = '1'
+            and a.agentcode = b.agentcode
+            and b.gradetype in ('01', '02', '03', '04')
+            and a.managecom = c.managecom
+            and d.agentnum = a.agentnum
+            and to_char(d.enddate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+            and d.managecom in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and d.managecom = #{manageCom, jdbcType=VARCHAR}
+            and nvl(b.postsign, '##') not in ('TMR-稳单', 'TMS-跟单', 'TMR-招聘', 'Coach经理', '虚拟账号')
+
+            ), t2 as (
+
+            select a.agentnum as agentnum, a.sponsor as managecom
+            from agentinfo_hris a, tmhrisagenttype b
+            where a.postenname = b.agentgrade
+            and b.agenttype in ('行政', '培训师', '质检')
+            and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '在职'
+
+            union
+
+            select a.agentnum as agentnum, a.sponsor as managecom
+            from agentinfo_hris a, tmhrisagenttype b
+            where a.postenname = b.agentgrade
+            and b.agenttype in ('行政', '培训师', '质检')
+            and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+            and a.agentstate = '离职'
+            and to_char(a.dimissiondate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+
+            union
+
+            select a.agentnum as agentnum, a.sponsor as managecom
+            from agentinfo_hris a, tmhrisagenttype b, tmbankagentsn c
+            where a.postenname = b.agentgrade
+            and a.agentnum = c.agentnum
+            and a.sponsor = c.managecom
+            and b.agenttype in ('行政', '培训师', '质检')
+            and a.sponsor in ('CMB CC(WH)', 'CMB CC(CD)', 'CMB CC(SH)')
+            and a.sponsor = #{manageCom, jdbcType=VARCHAR}
+            and to_char(c.enddate, 'yyyymm') = to_char(sysdate, 'yyyymm')
+
+            ), t3 as (
+
+            select decode(t1.managecom,
+            'CMB CC(WH)', '信诺武汉项目',
+            'CMB CC(CD)', '信诺成都项目',
+            'CMB CC(SH)', '上海信诺'
+            ) as managecom,
+            decode(b.GRADETYPE,
+            '01', '培训新人',
+            '02', 'TSR',
+            '03', '业务主任',
+            '04', '业务主任'
+            ) as posttype,
+            d.bankagentsn as agentsn,
+            a.surname || a.name as name,
+            to_char(nvl(d.startdate, a.employdate), 'yyyy-mm-dd') as employdate,
+            to_char(nvl(d.enddate, e.dimissiondate), 'yyyy-mm-dd') as dimissiondate,
+            a.idno as idno,
+            (
+            select wd11.codename
+            from ldcode wd11
+            where wd11.codetype = 'degree'
+            and wd11.code = a.degree
+            ) as Highestdegree,
+            a.mobile as mobile,
+            '前锦网络信息技术（上海）有限公司' as usetype,
+            a.salno as salno
+            from laagent a
+            inner join t1 on (a.agentnum = t1.agentnum)
+            inner join laagentinfo b on (a.agentcode = b.agentcode)
+            left join tmbankagentsn d on (a.agentnum = d.agentnum and t1.managecom = d.managecom)
+            left join tmdimission e on (a.agentcode = e.agentcode)
+            where b.GRADETYPE = '02'
+
+            union all
+
+            select decode(aa.sponsor,
+            'CMB CC(WH)', '信诺武汉项目',
+            'CMB CC(CD)', '信诺成都项目',
+            'CMB CC(SH)', '上海信诺'
+            ) as managecom,
+            bb.agenttype as posttype,
+            cc.bankagentsn as agentsn,
+            aa.name as name,
+            to_char(nvl(cc.startdate, aa.employdate), 'yyyy-mm-dd') as employdate,
+            to_char(nvl(cc.enddate, aa.dimissiondate), 'yyyy-mm-dd') as dimissiondate,
+            aa.idno as idno,
+            aa.degree as Highestdegree,
+            aa.mobile as mobile,
+            '前锦网络信息技术（上海）有限公司' as usetype,
+            dd.salno
+            from agentinfo_hris aa
+            inner join t2 on (aa.agentnum = t2.agentnum and aa.sponsor = t2.managecom)
+            left join tmhrisagenttype bb on (aa.postenname = bb.agentgrade)
+            left join tmbankagentsn cc on (aa.agentnum = cc.agentnum and aa.sponsor = cc.managecom)
+            left join tmrecruitmentagent dd on (dd.agentnum = aa.agentnum)
+            where bb.agenttype = 'TSR'
+
+            )
+            select rownum, t3.*
+            from t3
+            where t3.posttype = 'TSR'
+            and t3.dimissiondate is null
+        </if>
+
+        <if test="sheet == 'sheet2'">
+            select
+            a.MANAGECOM,
+            a.TYPE,
+            a.POST,
+            a.NAME,
+            a.PHONE,
+            a.MOBILE,
+            a.EMAIL
+            from TMAGENTLISTEMAILCONFIG a
+            where decode(#{manageCom, jdbcType=VARCHAR},
+            'CMB CC(WH)', '武汉信诺',
+            'CMB CC(CD)', '成都信诺',
+            'CMB CC(SH)', '上海信诺'
+            ) = a.managecom
+
+            union all
+
+            select '' ,'','','','','','' from dual
+
+            union all
+
+            select '备注：如有更换人员，请第一时间邮件告知综合室助理' ,'','','','','','' from dual
+        </if>
+    </select>
+
+    <insert id="insertEmail">
+        insert into LDMAILFILEENCRYPTED (
+        FILEID,
+        FILEPATH,
+        FILENAME,
+        PASSWORD,
+        ADDRESSEEGROUP,
+        SENDDATE,
+        SENDTIME
+        )
+        values(
+        to_char(createmaxno('EmailFile', 'SN'), 'FM0000000000'),
+        #{path, jdbcType=VARCHAR},
+        #{fileName, jdbcType=VARCHAR},
+        #{password, jdbcType=VARCHAR},
+        #{addresseeGroup, jdbcType=VARCHAR},
+        basic.CurrentDate,
+        basic.CurrentTime
+        )
+    </insert>
+
+</mapper>

@@ -1,0 +1,879 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentInfoToTmMisMapper">
+
+    <sql id="activeAgentSqlOne">
+        select
+        a.agentnum as 员工编号,
+        c.agentsn as 员工工号,
+        a.surname || a.name as 员工姓名,
+        'Active' as 员工状态,
+        c.APPLICATION2 as 入职月份,
+        to_char(a.employdate, 'YYYY/MM/DD') as 入职日期,
+        to_char(a.INDUEFORMDATE, 'YYYY/MM/DD') as 转正日期,
+        c.trainNum as 培训批次,
+        to_char(a.takeupdate, 'YYYY/MM/DD') as 上线日期,
+        (
+        select wc2.codename
+        from ldcode wc2
+        where wc2.codetype = 'f_isrehare'
+        and wc2.code = c.isrehare
+        ) as 是否Rehire,
+        to_char(c.trainenddate, 'YYYY/MM/DD') as 培训结束时间,
+        '' as 离职月份,
+        '' as 离职日期,
+        '' as 离职原因,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'hiretype'
+        and wc5.code = c.hiretype
+        ) as Hire_Type,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'f_recruitcanal'
+        and wc5.code = c.APPLICATION1
+        ) as 招聘渠道,
+        decode(c.channel,
+        '1', 'Digital and TM Sales',
+        '2', 'DTC HLA',
+        (
+        select wc6.codename
+        from ldcode wc6
+        where wc6.codetype = 'channel2'
+        and wc6.code = c.channel
+        )
+        ) as Channel,
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ) as 岗位,
+        b.AGENTGRADE as 职位名称英文,
+        (
+        select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 城市,
+        (
+        select t.ReportsRegion
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 区域,
+        (
+        select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom
+        ) as 项目,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b1
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b1
+        )
+        ) as 管理主管英文名,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b2
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b2
+        )
+        ) as 管理经理英文名,
+        c.tmmgr as 项目经理,
+        c.cityhead as 城市负责人,
+        '' as 转岗上线日期,
+        decode(
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ), 'CCM',
+        '', (
+        select wa1.agentnum
+        from laagent wa1
+        where wa1.agentcode = (
+        select wt1.branchmanager
+        from tmbranchgroup wt1
+        where wt1.agentgroup = (
+        select wt2.agentgroup
+        from latree wt2
+        where wt2.agentcode =
+        a.agentcode
+        )
+        )
+        )
+        ) as TMM员工编号,
+        decode(
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ), 'CCM',
+        (
+        select wa3.agentnum
+        from laagent wa3
+        where wa3.agentcode = (
+        select wt6.branchmanager
+        from tmbranchgroup wt6
+        where wt6.agentgroup = (
+        select wt7.agentgroup
+        from latree wt7
+        where wt7.agentcode = a.agentcode
+        )
+        )
+        ), (
+        select wa2.agentnum
+        from laagent wa2
+        where wa2.agentcode = (
+        select wt3.branchmanager
+        from tmbranchgroup wt3
+        where wt3.agentgroup = (
+        select wt4.upagentgroup
+        from tmbranchgroup wt4
+        where wt4.agentgroup = (
+        select wt6.agentgroup
+        from latree wt6
+        where wt6.agentcode = a.agentcode
+        )
+        )
+        )
+        )
+        ) as CCM员工编号
+        from laagent a,
+        latree b,
+        laagentinfo c,
+        tmbranchgroup d,
+        agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate = '01'
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and greatest(to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss'),
+        to_date(to_char(c.modifydate, 'YYYY/MM/DD') || ' ' || c.modifytime, 'YYYY/MM/DD HH24:mi:ss')) >
+        to_date(#{lastSelectedTime}, 'YYYY/MM/DD HH24:mi:ss')
+        and to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss') &lt;=
+        to_date(to_char(sysdate, 'YYYY/MM/DD HH24:mi:ss'), 'YYYY/MM/DD HH24:mi:ss')
+    </sql>
+
+    <sql id="activeAgentSqlTwo">
+        select
+        <if test="type == 'database'.toString()">
+            'TM' || to_char(createmaxno('TMAGENTINFOTOEDMP', 'SN'), 'FM000000000000000000') as 人员信息SN,
+            '${currentDate}' as STORE_DATE,
+        </if>
+        to_char(
+        nvl(
+        (case
+        when (select to_date(t.StaticDate_local, 'YYYY/MM/DD')
+        from TMAgentInfotoTMMIS t where t.StaffCode = a.agentnum) = c.b5 then a.modifydate
+        else c.b5
+        end),
+        a.modifydate),
+        'YYYY/MM/DD') as 该信息生效日期,
+        a.agentnum as 员工编号,
+        c.agentsn as 员工工号,
+        a.surname || a.name as 员工姓名,
+        'Active' as 员工状态,
+        c.APPLICATION2 as 入职月份,
+        to_char(a.employdate, 'YYYY/MM/DD') as 入职日期,
+        to_char(a.INDUEFORMDATE, 'YYYY/MM/DD') as 转正日期,
+        c.trainNum as 培训批次,
+        to_char(a.takeupdate, 'YYYY/MM/DD') as 上线日期,
+        (
+        select wc2.codename
+        from ldcode wc2
+        where wc2.codetype = 'f_isrehare'
+        and wc2.code = c.isrehare
+        ) as 是否Rehire,
+        to_char(c.trainenddate, 'YYYY/MM/DD') as 培训结束时间,
+        '' as 离职月份,
+        '' as 离职日期,
+        '' as 离职原因,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'hiretype'
+        and wc5.code = c.hiretype
+        ) as Hire_Type,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'f_recruitcanal'
+        and wc5.code = c.APPLICATION1
+        ) as 招聘渠道,
+        decode(c.channel,
+        '1', 'Digital and TM Sales',
+        '2', 'DTC HLA',
+        (
+        select wc6.codename
+        from ldcode wc6
+        where wc6.codetype = 'channel2'
+        and wc6.code = c.channel
+        )
+        ) as Channel,
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ) as 岗位,
+        b.AGENTGRADE as 职位名称英文,
+        (
+        select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 城市,
+        (
+        select t.ReportsRegion
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 区域,
+        (
+        select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom
+        ) as 项目,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b1
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b1
+        )
+        ) as 管理主管英文名,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b2
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b2
+        )
+        ) as 管理经理英文名,
+        c.tmmgr as 项目经理,
+        c.cityhead as 城市负责人,
+        '' as 转岗上线日期,
+        c.b1 as TMM员工编号,
+        c.b2 as CCM员工编号
+        from laagent a,
+        latree b,
+        laagentinfo c,
+        tmbranchgroup d,
+        agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate = '01'
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and greatest(to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss'),
+        to_date(to_char(c.modifydate, 'YYYY/MM/DD') || ' ' || c.modifytime, 'YYYY/MM/DD HH24:mi:ss')) >
+        to_date(#{lastSelectedTime}, 'YYYY/MM/DD HH24:mi:ss')
+        and to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss') &lt;=
+        to_date(to_char(sysdate, 'YYYY/MM/DD HH24:mi:ss'), 'YYYY/MM/DD HH24:mi:ss')
+    </sql>
+
+    <sql id="unActiveAgentSqlOne">
+        select
+        a.agentnum as 员工编号,
+        c.agentsn as 员工工号,
+        a.surname || a.name as 员工姓名,
+        (case a.agentstate
+        when '02' then 'Transfer'
+        when '03' then 'Resigned'
+        when '04' then '其他'
+        end) as 员工状态,
+        c.APPLICATION2 as 入职月份,
+        to_char(a.employdate, 'YYYY/MM/DD') as 入职日期,
+        to_char(a.INDUEFORMDATE, 'YYYY/MM/DD') as 转正日期,
+        c.trainNum as 培训批次,
+        to_char(a.takeupdate, 'YYYY/MM/DD') as 上线日期,
+        (
+        select wc2.codename
+        from ldcode wc2
+        where wc2.codetype = 'f_isrehare'
+        and wc2.code = c.isrehare
+        ) as 是否Rehire,
+        to_char(c.trainenddate, 'YYYY/MM/DD') as 培训结束时间,
+        e.dimissionmonth as 离职月份,
+        to_char(e.dimissiondate, 'YYYY/MM/DD') as 离职日期,
+        (
+        select wc27.codename
+        from ldcode wc27
+        where wc27.codetype = 'newdepartrsn'
+        and wc27.code = e.dimissionreason
+        ) as 离职原因,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'hiretype'
+        and wc5.code = c.hiretype
+        ) as Hire_Type,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'f_recruitcanal'
+        and wc5.code = c.APPLICATION1
+        ) as 招聘渠道,
+        decode(c.channel,
+        '1', 'Digital and TM Sales',
+        '2', 'DTC HLA',
+        (
+        select wc6.codename
+        from ldcode wc6
+        where wc6.codetype = 'channel2'
+        and wc6.code = c.channel
+        )
+        ) as Channel,
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ) as 岗位,
+        b.AGENTGRADE as 职位名称英文,
+        (
+        select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 城市,
+        (
+        select t.ReportsRegion
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 区域,
+        (
+        select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom
+        ) as 项目,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b1
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b1
+        )
+        ) as 管理主管英文名,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b2
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b2
+        )
+        ) as 管理经理英文名,
+        c.tmmgr as 项目经理,
+        c.cityhead as 城市负责人,
+        '' as 转岗上线日期,
+        decode(
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype =
+        'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ), 'CCM',
+        '', (
+        select wa1.agentnum
+        from laagent wa1
+        where wa1.agentcode = (
+        select wt1.branchmanager
+        from tmbranchgroup wt1
+        where wt1.agentgroup = (
+        select wt2.agentgroup
+        from latree wt2
+        where wt2.agentcode =
+        a.agentcode
+        )
+        )
+        )
+        ) as TMM员工编号,
+        decode(
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ), 'CCM',
+        (
+        select wa3.agentnum
+        from laagent wa3
+        where wa3.agentcode = (
+        select wt6.branchmanager
+        from tmbranchgroup wt6
+        where wt6.agentgroup = (
+        select wt7.agentgroup
+        from latree wt7
+        where wt7.agentcode =
+        a.agentcode
+        )
+        )
+        ),
+        (
+        select wa2.agentnum
+        from laagent wa2
+        where wa2.agentcode = (
+        select wt3.branchmanager
+        from tmbranchgroup wt3
+        where wt3.agentgroup = (
+        select wt4.upagentgroup
+        from tmbranchgroup wt4
+        where wt4.agentgroup = (
+        select wt6.agentgroup
+        from latree wt6
+        where wt6.agentcode =
+        a.agentcode
+        )
+        )
+        )
+        )
+        ) as CCM员工编号
+        from laagent a,
+        latree b,
+        laagentinfo c,
+        tmbranchgroup d,
+        tmdimission e,
+        agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate in ('02', '03', '04')
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and e.branchtype = '1'
+        and a.agentcode = e.agentcode
+        and greatest(to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss'),
+        to_date(to_char(c.modifydate, 'YYYY/MM/DD') || ' ' || c.modifytime, 'YYYY/MM/DD HH24:mi:ss')) >
+        to_date(#{lastSelectedTime}, 'YYYY/MM/DD HH24:mi:ss')
+        and to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss') &lt;=
+        to_date(to_char(sysdate, 'YYYY/MM/DD HH24:mi:ss'), 'YYYY/MM/DD HH24:mi:ss')
+    </sql>
+
+    <sql id="unActiveAgentSqlTwo">
+        select
+        <if test="type == 'database'.toString()">
+            'TM' || to_char(createmaxno('TMAGENTINFOTOEDMP', 'SN'), 'FM000000000000000000') as 人员信息SN,
+            '${currentDate}' as STORE_DATE,
+        </if>
+        to_char(
+        nvl(
+        (case
+        when (select to_date(t.StaticDate_local, 'YYYY/MM/DD')
+        from TMAgentInfotoTMMIS t where t.StaffCode = a.agentnum) = c.b5 then a.modifydate
+        else c.b5
+        end),
+        a.modifydate),
+        'YYYY/MM/DD') as 该信息生效日期,
+        a.agentnum as 员工编号,
+        c.agentsn as 员工工号,
+        a.surname || a.name as 员工姓名,
+        (case a.agentstate
+        when '02' then 'Transfer'
+        when '03' then 'Resigned'
+        when '04' then '其他'
+        end) as 员工状态,
+        c.APPLICATION2 as 入职月份,
+        to_char(a.employdate, 'YYYY/MM/DD') as 入职日期,
+        to_char(a.INDUEFORMDATE, 'YYYY/MM/DD') as 转正日期,
+        c.trainNum as 培训批次,
+        to_char(a.takeupdate, 'YYYY/MM/DD') as 上线日期,
+        (
+        select wc2.codename
+        from ldcode wc2
+        where wc2.codetype = 'f_isrehare'
+        and wc2.code = c.isrehare
+        ) as 是否Rehire,
+        to_char(c.trainenddate, 'YYYY/MM/DD') as 培训结束时间,
+        e.dimissionmonth as 离职月份,
+        to_char(e.dimissiondate, 'YYYY/MM/DD') as 离职日期,
+        (
+        select wc27.codename
+        from ldcode wc27
+        where wc27.codetype = 'newdepartrsn'
+        and wc27.code = e.dimissionreason
+        ) as 离职原因,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'hiretype'
+        and wc5.code = c.hiretype
+        ) as Hire_Type,
+        (
+        select wc5.codename
+        from ldcode wc5
+        where wc5.codetype = 'f_recruitcanal'
+        and wc5.code = c.APPLICATION1
+        ) as 招聘渠道,
+        decode(c.channel,
+        '1', 'Digital and TM Sales',
+        '2', 'DTC HLA',
+        (
+        select wc6.codename
+        from ldcode wc6
+        where wc6.codetype = 'channel2'
+        and wc6.code = c.channel
+        )
+        ) as Channel,
+        decode(b.agentgrade,
+        'ACCM', 'TMS',
+        'ACCM(P)', 'TMS',
+        (
+        select wc22.codealias
+        from ldcode wc22
+        where wc22.codetype = 'f_tmagentgrade'
+        and wc22.code = b.agentgrade
+        )
+        ) as 岗位,
+        b.AGENTGRADE as 职位名称英文,
+        (
+        select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 城市,
+        (
+        select t.ReportsRegion
+        from tmmanagecom t
+        where t.managecom = a.managecom
+        ) as 区域,
+        (
+        select wc9.name
+        from tmmanagecom wc9
+        where wc9.branchtype = '1'
+        and wc9.managecom = a.managecom
+        ) as 项目,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b1
+        )
+        ), (
+        select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b1
+        )
+        ) as 管理主管英文名,
+        NVL(
+        (
+        select w24.shortname
+        from laagentinfo w24
+        where w24.agentcode = (
+        select t.agentcode
+        from laagent t
+        where t.branchtype = '1'
+        and t.agentnum = c.b2
+        )
+        ), (select wh24.EnName
+        from agentinfo_hris wh24
+        where wh24.agentnum = c.b2
+        )
+        ) as 管理经理英文名,
+        c.tmmgr as 项目经理,
+        c.cityhead as 城市负责人,
+        '' as 转岗上线日期,
+        c.b1 as TMM员工编号,
+        c.b2 as CCM员工编号
+        from laagent a,
+        latree b,
+        laagentinfo c,
+        tmbranchgroup d,
+        tmdimission e,
+        agentunicode f
+        where a.branchtype = '1'
+        and a.agentstate in ('02', '03', '04')
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.agentnum = f.agentnum(+)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and e.branchtype = '1'
+        and a.agentcode = e.agentcode
+        and greatest(to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss'),
+        to_date(to_char(c.modifydate, 'YYYY/MM/DD') || ' ' || c.modifytime, 'YYYY/MM/DD HH24:mi:ss')) >
+        to_date(#{lastSelectedTime}, 'YYYY/MM/DD HH24:mi:ss')
+        and to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss') &lt;=
+        to_date(to_char(sysdate, 'YYYY/MM/DD HH24:mi:ss'), 'YYYY/MM/DD HH24:mi:ss')
+    </sql>
+
+    <sql id="minusAgentSql">
+        select
+        t.staffcode,
+        t.tmrcode,
+        t.staffname,
+        t.status,
+        t.join_month,
+        t.joindate,
+        t.official_date,
+        t.train_num,
+        t.onlinedate,
+        t.if_rehire,
+        t.training_end_date,
+        t.resign_month,
+        t.resign_date,
+        t.resign_reason,
+        t.hiretype,
+        t.recruit_channel,
+        t.sub_channel,
+        t.staff_latest_position,
+        t.staff_latest_grade,
+        t.staff_latest_city,
+        t.regional,
+        t.staff_latest_biz_unit_code,
+        t.staff_latest_supervisor,
+        t.staff_latest_ccmgr,
+        t.staff_latest_tmmgr,
+        t.staff_latest_director,
+        t.onlinedate_new,
+        t.staff_latest_ccmnum,
+        t.Staff_Latest_SupervisorNum
+        from TMAgentInfotoTMMIS t
+    </sql>
+
+    <sql id="querySql">
+        with tmmis as (
+        select tt.* from (
+        select t.* from (
+        <include refid="activeAgentSqlOne"/>
+        union all
+        <include refid="unActiveAgentSqlOne"/>
+        ) t
+        where 1 = 1
+        order by t.员工编号, t.员工姓名
+        ) tt
+        minus
+        <include refid="minusAgentSql"/>
+        )
+
+        select tt.* from (
+        select t.* from (
+        <include refid="activeAgentSqlTwo"/>
+        union all
+        <include refid="unActiveAgentSqlTwo"/>
+        ) t
+        where 1 = 1
+        order by t.员工编号, t.员工姓名
+        ) tt
+        where exists (select 1 from tmmis where tmmis.员工编号 = tt.员工编号)
+    </sql>
+
+    <select id="selectLastSelectedTime" resultType="java.lang.String">
+        select code from ldcode
+        where codetype = 'lasttimesenttotmmis'
+    </select>
+
+    <select id="selectAgentInfoTmMisUrl" resultType="java.lang.String">
+        select codename from ldcode
+        where codetype = 'agentinfotmmisurl'
+    </select>
+
+    <select id="selectExcelList" resultType="java.util.Map">
+        <include refid="querySql"/>
+    </select>
+
+    <delete id="deleteTmAgentInfoToEdMp">
+        delete from TMAGENTINFOTOEDMP
+        where STORE_DATE = #{currentDate}
+    </delete>
+
+    <insert id="insertTmAgentInfoToEdMp">
+        insert into TMAGENTINFOTOEDMP
+        select ttt.* from (
+        <include refid="querySql"/>
+        ) ttt
+    </insert>
+
+    <update id="updateLastSelectedTime">
+        update ldcode set code = #{now}
+        where codetype = 'lasttimesenttotmmis'
+    </update>
+
+    <update id="mergeTmAgentInfoToTmMis">
+        merge into TMAgentInfotoTMMIS t
+        USING (
+        <include refid="querySql"/>
+        ) tw on(t.StaffCode = tw.员工编号)
+        WHEN MATCHED THEN
+        UPDATE set
+        t.StaticDate=nvl(tw.该信息生效日期,t.StaticDate),
+        t.TMRCode=nvl(tw.员工工号,t.TMRCode),
+        t.StaffName=nvl(tw.员工姓名,t.StaffName),
+        t.Status=nvl(tw.员工状态,t.Status),
+        t.Join_Month=nvl(tw.入职月份,t.Join_Month),
+        t.Joindate=nvl(tw.入职日期,t.Joindate),
+        t.Official_Date=nvl(tw.转正日期,t.Official_Date),
+        t.Train_Num=nvl(tw.培训批次,t.Train_Num),
+        t.OnlineDate=nvl(tw.上线日期,t.OnlineDate),
+        t.If_Rehire=nvl(tw.是否Rehire,t.If_Rehire),
+        t.Training_End_Date=nvl(tw.培训结束时间,t.Training_End_Date),
+        t.Resign_Month=nvl(tw.离职月份,t.Resign_Month),
+        t.Resign_Date=nvl(tw.离职日期,t.Resign_Date),
+        t.Resign_Reason=nvl(tw.离职原因,t.Resign_Reason),
+        t.HireType=nvl(tw.Hire_Type,t.HireType),
+        t.Recruit_Channel=nvl(tw.招聘渠道,t.Recruit_Channel),
+        t.Sub_Channel=nvl(tw.Channel,t.Sub_Channel),
+        t.Staff_Latest_Position=nvl(tw.岗位,t.Staff_Latest_Position),
+        t.Staff_Latest_Grade=nvl(tw.职位名称英文,t.Staff_Latest_Grade),
+        t.Staff_Latest_City=nvl(tw.城市,t.Staff_Latest_City),
+        t.Regional=nvl(tw.区域,t.Regional),
+        t.Staff_Latest_Biz_Unit_Code=nvl(tw.项目,t.Staff_Latest_Biz_Unit_Code),
+        t.Staff_Latest_Supervisor=nvl(tw.管理主管英文名,t.Staff_Latest_Supervisor),
+        t.Staff_Latest_CCMgr=nvl(tw.管理经理英文名,t.Staff_Latest_CCMgr),
+        t.Staff_Latest_TMMgr=nvl(tw.项目经理,t.Staff_Latest_TMMgr),
+        t.Staff_Latest_Director=nvl(tw.城市负责人,t.Staff_Latest_Director),
+        t.StaticDate_local=nvl(tw.TMMIS信息修改日期,t.StaticDate_local),
+        t.modifydate = basic.CurrentDate,
+        t.modifytime = basic.CurrentTime,
+        t.staff_latest_ccmnum = nvl(tw.CCM员工编号,t.staff_latest_ccmnum),
+        t.Staff_Latest_SupervisorNum = nvl(tw.TMM员工编号,t.Staff_Latest_SupervisorNum)
+        WHEN NOT MATCHED THEN
+        INSERT VALUES (
+        tw.该信息生效日期,
+        tw.员工编号,
+        tw.员工工号,
+        tw.员工姓名,
+        tw.员工状态,
+        tw.入职月份,
+        tw.入职日期,
+        tw.转正日期,
+        tw.培训批次,
+        tw.上线日期,
+        tw.是否REHIRE,
+        tw.培训结束时间,
+        tw.离职月份,
+        tw.离职日期,
+        tw.离职原因,
+        tw.HIRE_TYPE,
+        tw.招聘渠道,
+        tw.CHANNEL,
+        tw.岗位,
+        tw.职位名称英文,
+        tw.城市,
+        tw.区域,
+        tw.项目,
+        tw.管理主管英文名,
+        tw.管理经理英文名,
+        tw.项目经理,
+        tw.城市负责人,
+        tw.转岗上线日期 ,
+        tw.TMMIS信息修改日期 ,
+        basic.CurrentDate,
+        basic.CurrentTime,
+        tw.CCM员工编号,
+        tw.TMM员工编号
+        )
+    </update>
+
+    <select id="selectName" resultType="java.lang.String">
+        select codename from ldcode
+        where codetype = 'tmmisusername' and code = 'name'
+    </select>
+
+    <select id="selectPwd" resultType="java.lang.String">
+        select codename from ldcode
+        where codetype = 'tmmisusername' and code = 'pwd'
+    </select>
+
+    <select id="selectDoMain" resultType="java.lang.String">
+        select codename from ldcode
+        where codetype = 'tmmisusername' and code = 'domain'
+    </select>
+
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmRelationshipMapper">
+
+    <select id="countRelationship" resultType="java.lang.Integer">
+        select count(1)
+        from laagentinfo a, tmagentv c, laagentgrade d
+        where a.b14 = 'Y'
+        and c.agentstate ='01'
+        and a.agentcode = c.agentcode
+        and a.postenname = d.gradecode
+        and not exists (
+        select 1
+        from TMRELATIONSHIP b
+        where (b.agentnum = c.agentnum or c.agentnum = b.relativesagentnum)
+        and b.flag = 'Y'
+        )
+    </select>
+
+    <select id="selectRelationship" resultType="java.util.Map">
+        select (
+        select x.shortname
+        from tmmanagecom x
+        where x.managecom = c.managecom
+        ) as SHORTNAME,
+        c.AGENTNUM,
+        c.NAME,
+        d.NOTI,
+        a.ISTRANINEE,
+        nvl((select x1.shortname from laagentinfo x1 where x1.agentcode = c.tms),'TBC') as TMS,
+        nvl((select x1.shortname from laagentinfo x1 where x1.agentcode = c.ccm),'TBC') as CCM
+        from laagentinfo a, tmagentv c, laagentgrade d
+        where a.b14 = 'Y'
+        and c.agentstate ='01'
+        and a.agentcode = c.agentcode
+        and a.postenname = d.gradecode
+        and not exists (
+        select 1
+        from TMRELATIONSHIP b
+        where (b.agentnum = c.agentnum or c.agentnum = b.relativesagentnum)
+        and b.flag = 'Y'
+        )
+    </select>
+
+    <select id="countSuperViseShip" resultType="java.lang.Integer">
+        select count(1)
+        from laagentinfo a, tmagentv c, laagentgrade d
+        where a.RelativesSupervise = 'Y'
+        and c.agentstate ='01'
+        and a.agentcode = c.agentcode
+        and a.postenname = d.gradecode
+        and not exists (
+        select 1
+        from SUPERVISERELATIVES b
+        where (b.agentnum = c.agentnum)
+        and b.flag = 'Y'
+        )
+    </select>
+
+    <select id="selectSuperViseShip" resultType="java.util.Map">
+        select (
+        select x.shortname
+        from tmmanagecom x
+        where x.managecom = c.managecom
+        ) as SHORTNAME,
+        c.AGENTNUM,
+        c.NAME,
+        d.NOTI,
+        a.ISTRANINEE,
+        nvl((select x1.shortname from laagentinfo x1 where x1.agentcode = c.tms),'TBC') as TMS,
+        nvl((select x1.shortname from laagentinfo x1 where x1.agentcode = c.ccm),'TBC') as CCM
+        from laagentinfo a, tmagentv c, laagentgrade d
+        where a.RelativesSupervise = 'Y'
+        and c.agentstate ='01'
+        and a.agentcode = c.agentcode
+        and a.postenname = d.gradecode
+        and not exists (
+        select 1
+        from SUPERVISERELATIVES b
+        where (b.agentnum = c.agentnum)
+        and b.flag = 'Y'
+        )
+    </select>
+
+</mapper>

@@ -1,0 +1,4 @@
+1、下载thrift，修改名字为thrift.exe，保存在
+D:\thrift\thrift.exe
+2、配置环境变量
+3、配置编译插件，执行maven clean install

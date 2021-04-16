@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgencyInfoMapper">
+
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM TM_JG_ZJJG A
+        WHERE 1 = 1
+        <include refid="where"/>
+    </select>
+
+    <select id="selectExcelList" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT A.ZJJGDM,
+        A.SSFZJGDM AS SSFZJGDMMC,
+        A.ZJJGMC,
+        A.ZJJGDZ,
+        (SELECT W2.CODENAME
+        FROM LDCODE W2
+        WHERE W2.CODETYPE = 'jg_zjjglb'
+        AND W2.CODE = A.ZJJGLB) AS ZJJGLBMC,
+        A.ZJJGTYBM,
+        (SELECT W3.CODENAME
+        FROM LDCODE W3
+        WHERE W3.CODETYPE = 'jg_zjjgzjlx'
+        AND W3.CODE = A.ZJJGZJLX) AS ZJJGZJLXMC,
+        A.ZJJGZJHM,
+        TO_CHAR(A.HDZJXKZRQ, 'yyyy-mm-dd') AS HDZJXKZRQ,
+        TO_CHAR(A.ZJXKZDQR, 'yyyy-mm-dd') AS ZJXKZDQR,
+        TO_CHAR(A.QYRQ, 'yyyy-mm-dd') AS QYRQ,
+        TO_CHAR(A.XYDQRHJYR, 'yyyy-mm-dd') AS XYDQRHJYR,
+        A.ZJYWXKZH,
+        A.ZJYWXKZMC,
+        A.YWFW,
+        A.JYQY,
+        A.FZRXM,
+        A.WFWGJL
+        FROM TM_JG_ZJJG A
+        WHERE 1 = 1
+        <include refid="where"/>
+    </select>
+
+    <sql id="where">
+        <if test="code !=null and code !=''">
+            AND A.ZJJGDM LIKE #{code,jdbcType=VARCHAR} || '%'
+        </if>
+        <if test="name !=null and name !=''">
+            AND A.ZJJGMC LIKE #{name,jdbcType=VARCHAR} || '%'
+        </if>
+        <if test="type !=null and type !=''">
+            AND A.ZJJGLB = #{type,jdbcType=VARCHAR}
+        </if>
+        <if test="idType !=null and idType !=''">
+            AND A.ZJJGZJLX = #{idType,jdbcType=VARCHAR}
+        </if>
+    </sql>
+
+</mapper>

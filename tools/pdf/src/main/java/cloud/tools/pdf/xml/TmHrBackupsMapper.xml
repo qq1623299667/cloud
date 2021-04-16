@@ -1,0 +1,1097 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmHrBackupsMapper">
+
+	<!--已冻结的月份不能进行快照-->
+	<select id="checkMaxFreeze"  resultType="java.lang.Integer">
+		select count(1) from ldcode where codetype='tmmonth' and code='maxfreeze' and codealias <![CDATA[  >= ]]>  #{lastMonth}
+	</select>
+	<!--HR人力快照已经确认过，无法进行快照！-->
+	<select id="checkSure"  resultType="java.lang.Integer">
+		select count(1) from ldcode a  where a.codetype = 'TMHRBackupsSureMonth' and a.CODEALIAS>= #{lastMonth}
+	</select>
+
+    <select id="getTmHrBackupsSureMonth" resultType="java.lang.String">
+        select a.codealias from ldcode a where a.codetype = 'TMHRBackupsSureMonth'
+    </select>
+
+	<update id="updateTmHrBackupsSureMonth">
+		update ldcode a set a.CODEALIAS = #{lastMonth} where a.codetype = 'TMHRBackupsSureMonth'
+	</update>
+
+    <select id="countTmlaagentcByLastMonth" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from tmlaagentc a where a.bakmonth = #{lastMonth}
+    </select>
+
+	<select id="countSureMouthByLastMonth" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(1) from ldcode a where a.codetype = 'TMHRBackupsSureMonth' and a.codealias = to_char(add_months(to_date( #{lastMonth},'yyyymm'),-1), 'yyyymm')
+    </select>
+
+	<delete id="deleteTmlaagentc">
+		delete  from TMLaagentC a where a.bakmonth=  #{lastMonth}
+	</delete>
+
+    <!-- 人员信息备份-->
+    <insert id="insertTmlaagentc">
+insert into tmlaagentc
+        			select
+        			 #{lastMonth} bakmonth,
+        			v.managecom managecom,
+        			v.agentgroup agentgroup,
+        			(select branchattr from tmbranchgroup where agentgroup=v.agentgroup) branchattr,
+        			'' tmsagentgroup,
+        			'' tmsbranchattr,
+        			'' tmsbranchname,
+        			'' ccmagentgroup,
+        			'' ccmbranchattr,
+        			'' ccmbranchname,
+        			'1'branchtype,
+        			v.agentcode agentcode,
+        			v.agentnum agentnum,
+        			v.agentsn agentsn,
+        			v.name name,
+        			'' shortname,
+        			v.agentstate agentstate,
+        			ag.employdate employdate,
+        			to_char(ag.employdate,'YYYYMM') employmonth,
+        			tmbasic.DimmisionCalRate(v.agentcode, #{lastMonth}) dimissionrate,
+        			v.dimmisiondate dimissiondate,
+        			to_char(v.dimmisiondate,'YYYYMM') dimissionmonth,
+        			ag.takeupdate takeupdate,
+
+        		   tmwagecal.GetProtectRate(ag.managecom,ag.takeupdate, #{lastMonth},
+        		   v.gradelevel,ai.isprotect) protectrate,
+
+        			v.agentgrade agentgrade,
+        			v.gradelevel gradelevel,
+        			'' tmscode,
+        			'' ccmcode,
+
+        			ai.isrehare isrehare,
+        			ai.trainstartdate trainstartdate,
+        			ai.trainenddate trainenddate,
+        			(select dimissionreason from tmdimission where agentcode=v.agentcode) dimissionreason,
+        			ai.contracttype contracttype,
+        			ai.istraninee istraninee,
+        			ai.hiretype hiretype,
+        			ai.application1 recruitcanal,
+        			ai.channel channel,
+        			ai.gradetype gradetype,
+        			ai.city city,
+        			ai.tmmgr tmmgr,
+        			ai.cityhead cityhead,
+        			ag.sex sex,
+        			ag.degree degree,
+        			ag.quafno quafno,
+        			ag.quafstartdate quafstartdate,
+        			ag.quafenddate quafenddate,
+        			ag.salno salno,
+        			ag.salstartdate salstartdate,
+        			ag.salenddate salenddate,
+        			ag.idtype idtype,
+        			ag.idno idno,
+        			ag.birthday birthday,
+        			ag.mobile mobile,
+        			ag.indueformdate indueformdate,
+        			ai.isprotect isprotect,
+        			(select basesalary from latree where agentcode=v.agentcode) basesalary,
+        			ag.workflag workflag,
+        			ag.workage workage,
+        			ag.salequaf salequaf,
+        			ag.graduateschool graduateschool,
+        			ag.speciality speciality,
+        			ag.nationality nationality,
+        			ag.rgtaddress rgtaddress,
+        			ag.nativeplace nativeplace,
+        			ag.polityvisage polityvisage,
+        			ag.homeaddress homeaddress,
+        			ag.zipcode zipcode,
+        			ag.phone phone,
+        			ag.email email,
+        			ag.marriage marriage,
+        			ag.oldcom oldcom,
+        			ag.headship headship,
+        			ag.polityvisage posttitle,
+        			ag.remark remark,
+        		    #{operator} operator,
+        		   basic.CurrentDate makedate,
+        		   basic.CurrentTime maketime
+        			from tmlaagentv v,laagent ag,laagentinfo ai where 1=1
+        			and v.agentcode=ag.agentcode and v.agentcode=ai.agentcode
+        			and ag.branchtype='1'
+    </insert>
+
+	<update id="updateTmlaagentc1">
+		update tmlaagentc c set TMSAgentGroup=c.agentgroup where c.gradelevel in ('TMR','TMS') and c.bakmonth= #{lastMonth}
+	</update>
+
+
+	<update id="updateTmlaagentc2">
+		update tmlaagentc c set CCMAgentGroup=(select upagentgroup from tmbranchgroup where agentgroup=c.agentgroup) where c.gradelevel in ('TMR','TMS')  and c.bakmonth=#{lastMonth}
+	</update>
+
+
+	<update id="updateTmlaagentc3">
+		update tmlaagentc c set tmscode=(select branchmanager from tmbranchgroup where agentgroup=c.TMSAgentGroup)
+    								,tmsbranchattr=(select branchattr from tmbranchgroup where agentgroup=c.TMSAgentGroup)
+    								,tmsbranchname=(select branchname from tmbranchgroup where agentgroup=c.TMSAgentGroup)
+    								,ccmcode=(select branchmanager from tmbranchgroup where agentgroup=c.CCMAgentGroup)
+    								,ccmbranchattr=(select branchattr from tmbranchgroup where agentgroup=c.CCMAgentGroup)
+    								,ccmbranchname=(select branchname from tmbranchgroup where agentgroup=c.CCMAgentGroup)
+    								 where c.gradelevel in ('TMR','TMS') and c.bakmonth=#{lastMonth}
+	</update>
+
+	<update id="updateTmlaagentc4">
+		update tmlaagentc c set CCMAgentGroup=c.agentgroup where c.gradelevel='CCM'  and c.bakmonth=#{lastMonth}
+	</update>
+
+	<update id="updateTmlaagentc5">
+	update tmlaagentc c set ccmcode=(select branchmanager from tmbranchgroup where agentgroup=c.CCMAgentGroup)
+    								,ccmbranchattr=(select branchattr from tmbranchgroup where agentgroup=c.CCMAgentGroup)
+    								,ccmbranchname=(select branchname from tmbranchgroup where agentgroup=c.CCMAgentGroup)
+    								 where c.gradelevel='CCM' and c.bakmonth=#{lastMonth}
+	</update>
+
+	<delete id="deleteTmAgentcReport">
+		delete from TMAGENTCREPORT a where a.BAKMONTH = #{lastMonth}
+	</delete>
+
+	<insert id="insertTmAgentcReport">
+		insert into TMAGENTCREPORT
+		(BAKMONTH,
+		AGENTCODE,
+		AGENTNUM,
+		AGENTSN,
+		CHNAME,
+		ENNAME,
+		AGENTSTATE,
+		EMPLOYMONTH,
+		EMPLOYDATE,
+		INDUEFORMDATE,
+		TRAINSN,
+		ONLINEDATE,
+		PROJECTCHANGEONLINEDATE,
+		ISREHIRE,
+		TRAINSTARTDATE,
+		TRAINENDDATE,
+		OUTWORKMONTH,
+		OUTWORKDATE,
+		OUTWORKFLAG,
+		OUTWORKREASONS,
+		ISREBACK,
+		SPECIFICREASONS,
+		CONTRACTTYPE,
+		ISTRAINEE,
+		HIRE_TYPE,
+		RECRUITMENTCHANNELS,
+		CHANNEL,
+		POSTLOGO,
+		POSTTYPE,
+		AGENTPOST,
+		GRADEENNAME,
+		CITY,
+		AREA,
+		MANAGECOM,
+		TMSENNAME,
+		TMSNUM,
+		CCMENNAME,
+		CCMNUM,
+		COACH,
+		PROJECTCCM,
+		CITYMANAGER,
+		COMTMSENNAME,
+		COMTMSGROUPNAME,
+		COMTMSNUM,
+		COMCCMENNAME,
+		COMCCMGROUPNAME,
+		COMCCMNUM,
+		TMRTOTMSDATE,
+		COACHTOTMS1DATE,
+		REFEREENUM,
+		PHONENUM,
+		IDTYPE,
+		IDNUM,
+		BANK,
+		CARDNO,
+		SECURITYCITY,
+		SECURITYID,
+		IDCITY,
+		HOUSEHOLDTYPE,
+		WORKYEAR,
+		SEX,
+		BRITHDAY,
+		AGE,
+		MARRYSTATE,
+		NATIONALITY,
+		NATION,
+		POLITICALTYPE,
+		COMPANYPHONE,
+		COMPANYMAIL,
+		AGENTMAIL,
+		EMERGENCYNAME,
+		EMERGENCYPHONE,
+		EMERGENCYTELEPHONE,
+		ONECHRID,
+		CHIRDNAME1,
+		CHIRDSEX1,
+		CHRIDBRITHDAY1,
+		CHRIDAGE1,
+		CHIRDNAME2,
+		CHIRDSEX2,
+		CHRIDBRITHDAY2,
+		CHRIDAGE2,
+		CHIRDNAME3,
+		CHIRDSEX3,
+		CHRIDBRITHDAY3,
+		CHRIDAGE3,
+		HIGHESTEDUCATION,
+		HIGHESTEDUTYPE,
+		GRADUATESCHOOL,
+		MAJOR,
+		ENTRANCEDATE,
+		GRADUATEDATE,
+		ISSTUDENT,
+		FRISTWORKDATE,
+		JOINPARTYDATE,
+		ISREGULARPARTY,
+		REGULARDATE,
+		ISOUTPARTY,
+		OUTPARTYDATE,
+		RESIDENCETYPE,
+		DETAILEDADDRESS,
+		DETAILEDADDRESSNOW,
+		ENGLISHLEVEL,
+		AGENTLEVEL,
+		SKILLLEVEL,
+		LASTWORK,
+		LASTWORKSTART,
+		LASTWORKEND,
+		WORKCOUNT,
+		DOCONCATDATE,
+		PROBATIONEND,
+		CONCATENDDATE,
+		WECHAT,
+		QQNUM,
+		AGENTGRADENAME,
+		AGENTGRADE,
+		INSURANCEPLAN,
+		HRCOST,
+		ISDISABILITY,
+		ALENO,
+		ALESTARTDATE,
+		ALEENDDATE,
+		CERTIFICATENO,
+		CERTIFICATESTARTDATE,
+		CERTIFICATEENDDATE,
+		CERTIFICATEEND,
+		DETAILEDMANAGECOM,
+		CHANELTYPE,
+		WORKAREA,
+		CERTIFICATEAREA,
+		WAGETYPE,
+		ORGANIZATIONID,
+		WORKPLACE,
+		WORKPLACEDETAILED,
+		INMANAGECOM,
+		WORKPLACECITY,
+		COSTCENTER,
+		FUNCTIONALGROUP2,
+		FUNCTIONAL,
+		FUNCTIONALLEVEL,
+		GROUPNAME1,
+		GROUPNAME2,
+		GROUPCNNAME,
+		GROUPENNAME1,
+		GROUPENNAME2,
+		GROUPENNAME,
+		GRADECNNAME2,
+		GRADEENNAME1,
+		ISPROTECT,
+		MINWAGE,
+		ALLOWANCE,
+		USERNAME,
+		BANKAGENTSN,
+		INSURANCEAGENTSN,
+		BANKSN,
+		YEARBANKSN,
+		INCREMENTTYPE,
+		CHANGESTARTDATE,
+		REMARK,
+		SYSTEMFLAG,
+		WARMSUBSY,
+		CHIRDTYPE1,
+		CHIRDNO1,
+		CHIRDTYPE2,
+		CHIRDNO2,
+		CHIRDTYPE3,
+		CHIRDNO3,
+		CHIRDNAME4,
+		CHIRDSEX4,
+		CHIRDBIRTHDAY4,
+		CHIRDAGE4,
+		CHIRDTYPE4,
+		CHIRDNO4)
+
+		select g.bakmonth as  bakmonth,a.agentcode as 员工代码
+		, a.agentnum as 员工编号
+		,c.agentsn as 员工工号
+		,nvl(unistr(REPLACE(f.surname||f.name, '\u', '\')),a.surname||a.name) as 中文名
+		,c.shortname as 英文名
+		,'在职' as 员工状态
+		,coalesce(c.APPLICATION2,to_char(a.employdate,'YYYYMM')) as 入职月份
+		,to_char(a.employdate,'YYYY-MM-DD') as 入职日期
+		,to_char(a.INDUEFORMDATE,'YYYY-MM-DD')  as 转正日期
+		, c.trainNum as 培训批次
+		,to_char(a.takeupdate,'YYYY-MM-DD') as 上线日期
+		,to_char(c.projectChangeOnlineDate,'YYYY-MM-DD') as 项目变更上线日期
+		,(select wc2.codename from ldcode wc2 where wc2.codetype='f_isrehare' and wc2.code=c.isrehare) as 是否Rehire
+		,to_char(c.trainstartdate,'YYYY-MM-DD') as 培训起始时间
+		,to_char(c.trainenddate,'YYYY-MM-DD') as 培训结束时间
+		,'' as 离职月份
+		,'' as 离职日期
+		,'' as 离职性质
+		,'' as 离职原因
+		,'' as 是否建议重新聘用
+		, '' as 离职具体原因
+		,(select wc3.codename from ldcode wc3 where wc3.codetype='contracttype' and wc3.code=c.contracttype) as 合同类型
+		,(select wc4.codename from ldcode wc4 where wc4.codetype='yesno' and wc4.code=c.istraninee) as 是否Trainee
+		,(select wc5.codename from ldcode wc5 where wc5.codetype='hiretype' and wc5.code=c.hiretype) as Hire_Type
+		,(select wc5.codename from ldcode wc5 where wc5.codetype='f_recruitcanal' and wc5.code=c.APPLICATION1) as 招聘渠道
+		,(select wc6.codename from ldcode wc6 where wc6.codetype='channel2' and wc6.code=c.channel) as Channel
+		,c.postsign as 岗位标识
+		,case when b.agentgrade in('ACCM','ACCM(P)') and c.istraninee='N'  then 'TMS Headcount' when b.agentgrade in('ACCM','ACCM(P)') and c.istraninee='Y' then 'TMS Trainee' else (select wc7.codename from ldcode wc7 where wc7.codetype='gradetype' and wc7.code=c.gradetype) end as 岗位类别
+		,decode (b.agentgrade,'ACCM','TMS','ACCM(P)','TMS',(select wc22.codealias from ldcode wc22 where wc22.codetype='f_tmagentgrade' and wc22.code=b.agentgrade)) as 岗位
+		, b.AGENTGRADE as 职位名称英文a
+		,(select t.ReportsCity from tmmanagecom t where t.managecom = a.managecom) as 城市
+		,(select t.ReportsRegion from tmmanagecom t where t.managecom = a.managecom) as 区域
+		<!--	//		 		 ,(select wc8.codename from ldcode wc8 where wc8.codetype='city2' and wc8.code=c.city) as 城市
+            //		 		 ,(select wc10.name from tmmanagecom wc10 where wc10.managecom = (select t.upmanagecom from tmmanagecom t where t.managecom = a.managecom)) as 区域
+            -->
+            ,(select wc9.name from tmmanagecom wc9 where wc9.branchtype='1' and wc9.managecom=a.managecom) as 项目
+
+            ,(select w24.shortname from laagentinfo w24 where w24.agentcode=(select t.agentcode from laagent t where t.branchtype='1' and t.agentnum=c.b1)) as 管理主管英文名
+            ,c.b1 as 管理主管员工编号
+            ,(select w24.shortname from laagentinfo w24 where w24.agentcode=(select t.agentcode from laagent t where t.branchtype='1' and t.agentnum=c.b2)) as 管理经理英文名
+            ,c.b2 as 管理经理员工编号
+
+            ,c.belongCode as 归属Coach
+            ,c.tmmgr as 项目经理
+            ,c.cityhead as 城市负责人
+
+            ,(case when d.branchlevel='02' then nvl((select w24.shortname from laagentinfo w24 where w24.agentcode=d.branchmanager),'TBC') else '' end) as  计佣主管英文名
+            ,(case when d.branchlevel='02' then d.branchname else '' end) as 计佣主管团队名称
+            ,decode(d.branchmanager,'','',((case when d.branchlevel='02' then nvl((d.branchname),'') else '' end))) as 计佣主管员工编号
+            ,(case when d.branchlevel='02' then nvl((select w25.shortname from laagentinfo w25, tmbranchgroup we25 where we25.branchtype='1' and w25.agentcode=we25.branchmanager and we25.agentgroup=d.upagentgroup),'TBC') when d.branchlevel='01' then c.shortname else 'TBC' end) as 计佣经理英文名
+            ,(case when d.branchlevel='02' then nvl((select w26.branchname from tmbranchgroup w26 where w26.branchtype='1' and w26.agentgroup=d.upagentgroup),'TBC') when d.branchlevel='01' then d.branchname else '' end) as 计佣经理团队名称
+            ,decode(d.branchmanager,'','',(case when d.branchlevel='02' then nvl((select wc25.agentnum from laagentinfo w25, tmbranchgroup we25,laagent wc25 where wc25.agentcode = w25.agentcode and we25.branchtype='1' and w25.agentcode=we25.branchmanager and we25.agentgroup=d.upagentgroup),'') when d.branchlevel='01' then a.agentnum else '' end)) as 计佣经理员工编号
+
+            ,to_char(c.TMRtoTMSdate,'YYYY-MM-DD') as TMR晋升TMS日期
+            ,to_char(c.CoachtoTMS1date,'YYYY-MM-DD') as Coach晋升TMS1日期
+            ,c.PusherAgentCode as 内推人员工编号
+            ,a.mobile as 本人手机号码
+            ,(select wd12.codename from ldcode wd12 where wd12.codetype='f_tmidtype' and wd12.code=a.idtype) as 证件类型
+            ,a.idno as 证件号码
+            ,c.Bank as 开户银行
+            ,c.cardNum as 卡号
+            ,c.SocialSecurityPayCity as 社保缴纳城市
+            ,c.SocialSecurityPayAccount as 社保缴纳账户
+            ,a.rgtaddress as 户籍市
+            ,(select wd14.codename from ldcode wd14 where wd14.codetype='tm_householdtype' and wd14.code=c.Householdtype) as 户籍类型
+            ,to_char(c.companyStartDate,'YYYY-MM-DD') as 司龄起算日期
+            ,(select wd10.codename from ldcode wd10 where wd10.codetype='sex' and wd10.code=a.sex) as 性别
+            ,to_char(a.birthday,'YYYY-MM-DD') as 生日
+            ,decode(a.birthday,null,'',(select floor(MONTHS_BETWEEN(sysdate,a.birthday)/12) from dual)) as 年龄
+            ,(select wd20.codename from ldcode wd20 where wd20.codetype='tm_marriage' and wd20.code=a.marriage) as 婚姻状况
+            ,c.Country as 国籍
+            ,(select wd16.codename from ldcode wd16 where wd16.codetype='nationality' and wd16.code=a.nationality) as 民族
+            ,(select wd19.codename from ldcode wd19 where wd19.codetype='polityvisage' and wd19.code=a.polityvisage) as 政治面貌
+            ,c.companyPhone as 公司固定电话
+            ,c.firmMail as 公司邮箱
+            ,a.email as 个人邮箱
+            ,c.emergencyContactName as 紧急联系人姓名
+            ,c.emergencyContactPhone as 紧急联系人手机
+            ,a.phone as 紧急联系人固定电话
+            ,c.OnlyChildCard as 独生子女证
+            ,nvl(unistr(REPLACE(f.b1, '\u', '\')),c.Child1name) as 子女姓名1
+            ,c.Child1Sex as 子女性别1
+            ,to_char(c.Child1Birthday,'YYYY-MM-DD') as 子女出生日期1
+            ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child1Birthday)/12) from dual)) as 子女年龄1
+            ,nvl(unistr(REPLACE(f.b2, '\u', '\')),c.Child2name) as 子女姓名2
+            ,c.Child2Sex as 子女性别2
+            ,to_char(c.Child2Birthday,'YYYY-MM-DD') as 子女出生日期2
+            ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child2Birthday)/12) from dual))as 子女年龄2
+            ,nvl(unistr(REPLACE(f.b3, '\u', '\')),c.Child3name) as 子女姓名3
+            ,c.Child3Sex as 子女性别3
+            ,to_char(c.Child3Birthday,'YYYY-MM-DD') as 子女出生日期3
+            ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child3Birthday)/12) from dual)) as 子女年龄3
+            ,(select wd11.codename from ldcode wd11 where wd11.codetype='degree' and wd11.code=a.degree) as 最高学历
+            ,c.HighestDegree as 最高学位
+            ,a.graduateschool as 毕业院校
+            ,a.speciality as 专业
+            ,to_char(c.AdmissionDate,'YYYY-MM-DD') as 入学时间
+            ,to_char(c.graduationDate,'YYYY-MM-DD') as 毕业时间
+            ,c.isStudent as 是否是学生
+            ,to_char(c.firstJobDate,'YYYY-MM-DD') as 第一次参加工作时间
+            ,to_char(c.joinThePartyDate,'YYYY-MM-DD') as 入党时间
+            ,c.isFormalPartyMember as 预备党员是否转正式党员
+            ,to_char(c.isFormalPartyMemberDate,'YYYY-MM-DD') as 预备党员转正时间
+            ,c.leaveParty as 是否退党
+            ,to_char(c.leavePartyDate,'YYYY-MM-DD') as 退党时间
+            ,c.liveWay as 居住方式
+            ,c.IDCardAddress as 身份证详细住址
+            ,a.homeaddress as 目前住所详细地址
+            ,c.EnglishLevel as 英语等级
+            ,(select wd21.codename from ldcode wd21 where wd21.codetype='posttitle' and wd21.code=a.posttitle) as 职称
+            ,c.skillLevel as 职业技能等级
+            ,a.oldcom as 上一家工作单位
+            ,to_char(c.lastJobStartDate,'YYYY-MM-DD') as 上一家工作开始日期
+            ,to_char(c.lastJobEndDate,'YYYY-MM-DD') as 上一家工作结束日期
+            ,c.application3 as 入职前本职位从业时长年
+            ,to_char(c.SignLaborContractDate,'YYYY-MM-DD') as 实际签订劳动合同日期
+            ,to_char(c.ProbationEndDate,'YYYY-MM-DD') as 试用期到期日
+            ,to_char(c.contractEndDate,'YYYY-MM-DD') as 合同到期日
+            ,c.weChat as 微信
+            ,c.QQ as QQ
+            ,c.postCnName as 职位名称中文
+            ,c.postEnName as 职位名称英文
+            ,c.InsurancePlan as 保险计划
+            ,c.HRCost as HRCost
+            ,c.Disabled as 残障人士
+
+            ,a.quafno as 资格证号ALE证
+            ,to_char(a.quafstartdate,'YYYY-MM-DD') as 资格证有效起期
+            ,to_char(a.quafenddate,'YYYY-MM-DD') as 资格证截止时间
+            ,a.salno as 执业证证件号码
+            ,to_char(a.salstartdate,'YYYY-MM-DD') as 执业证起始时间
+            ,to_char(a.salenddate,'YYYY-MM-DD') as 执业证截止时间
+            ,to_char(c.PracticeOutDate,'YYYY-MM-DD') as 执业证注销时间
+            ,c.agencyName as 所属机构全称
+            ,c.SaleChannelType as 销售渠道类型
+            ,c.BusinessScope as 业务范围
+            ,c.PracticeArea as 执业区域
+            ,c.PayCategory as 报薪类别
+            ,c.establishmentCode as 编制代码
+            ,c.Workplace as 职场
+            ,c.WorkplaceAdress as 职场详细地址
+            ,c.Affiliation as 所属机构
+            ,c.workplacecity as 职场城市
+            ,c.CostCenter as 成本中心
+            ,c.SecFunctionGroup as 二级职能组
+            ,c.Title as 职衔
+            ,(select wc23.codename from ldcode wc23 where wc23.codetype='f_tmagentgrade' and wc23.code=b.agentgrade) as 职级
+            ,c.FirCnDepartment as 一级部门一级团队中文
+            ,c.SecCnDepartment as 二级部门二级团队中文
+            ,c.CnGroup as 组别分公司部门中文
+            ,c.FirEnDepartment as 一级部门一级团队英文
+            ,c.SecEnDepartment as 二级部门二级团队英文
+            ,c.EnGroup as 组别分公司部门英文
+            ,c.CnPosition as 职务名称中文
+            ,b.AGENTGRADE as 职务名称英文
+    <!--		// ,c.EnGroup as 组别分公司部门英文1
+            //		 		 ,(select wd15.codename from ldcode wd15 where wd15.codetype='yesno' and wd15.code=a.salequaf) as 销售资格
+            //		 		 ,(select wd14.codename from ldcode wd14 where wd14.codetype='yesno' and wd14.code=a.workflag) as 是否同业
+            -->
+		,(select wd13.codename from ldcode wd13 where wd13.codetype='yesno' and wd13.code=c.isprotect) as 是否享受保护政策
+		,b.basesalary as 底薪
+		,c.MGTsubsidy as 管理津贴
+		,c.DomainAccount as 域帐号
+		,c.banksn as 银行工号
+		,c.Insurersn as 保险工号
+		,c.FWbanksn as 食行天下银行工号
+		,c.yearpaybanksn as 年费银行工号
+		,c.ValueAddedSort as 增值分类
+		,to_char(c.b5,'YYYY-MM-DD') as 调动生效日期
+		,a.remark as 备注
+		,'SMART' as 系统标识
+		,(case  when c.postsign in(select codename from ldcode l1 where l1.codetype='postsigntype') then '是' when b.AGENTGRADE in(select codename from ldcode l1 where l1.codetype='agentgradetype') then '是' else '否' end) as 是否发放高温津贴
+		,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child1type) as 子女证件类型1
+		,c.child1no as 子女证件号码1
+		,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child2type) as 子女证件类型2
+		,c.child2no as 子女证件号码2
+		,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child3type) as 子女证件类型3
+		,c.child3no as 子女证件号码3
+		,nvl(unistr(REPLACE(f.b4, '\u', '\')),c.Child4name) as 子女姓名4
+		,c.Child4Sex as 子女性别4
+		,to_date(to_char(c.Child4Birthday,'YYYY-MM-DD'),'YYYY-MM-DD') as 子女出生日期4
+		,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child4Birthday)/12) from dual)) as 子女年龄4
+		,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child4type) as 子女证件类型4
+		,c.child4no as 子女证件号码4
+		from laagent a,latree b,laagentinfo c,tmbranchgroup d,agentunicode f,tmlaagentc g
+		where a.branchtype='1' and a.agentstate='01' and g.agentcode =  a.agentcode
+		and b.branchtype='1' and a.agentcode=b.agentcode
+		and a.agentcode=c.agentcode
+		and a.agentnum=f.agentnum(+)
+		and d.branchtype='1' and a.agentgroup=d.agentgroup
+		<if test="lastMonth!=null and lastMonth!=''">
+			and g.bakmonth = #{lastMonth}
+		</if>
+
+		union all
+		select g.bakmonth as  bakmonth,a.agentcode as 员工代码
+		,a.agentnum as 员工编号
+		,c.agentsn as 员工工号
+		,nvl(unistr(REPLACE(f.surname||f.name, '\u', '\')),a.surname||a.name) as 中文名
+		,c.shortname as 英文名
+		,(case a.agentstate when '02' then 'Transfer' when '03' then '离职' when '04' then '其他' end) as 员工状态
+		,coalesce(c.APPLICATION2,to_char(a.employdate,'YYYYMM')) as 入职月份
+		,to_char(a.employdate,'YYYY-MM-DD') as 入职日期
+		,to_char(a.INDUEFORMDATE,'YYYY-MM-DD')  as 转正日期
+		, c.trainNum as 培训批次
+		,to_char(a.takeupdate,'YYYY-MM-DD') as 上线日期
+		,to_char(c.projectChangeOnlineDate,'YYYY-MM-DD') as 项目变更上线日期
+		,(select wc2.codename from ldcode wc2 where wc2.codetype='f_isrehare' and wc2.code=c.isrehare) as 是否Rehire
+		,to_char(c.trainstartdate,'YYYY-MM-DD') as 培训起始时间
+		,to_char(c.trainenddate,'YYYY-MM-DD') as 培训结束时间
+		<!--	/*  ,(select max(wc28.this.mBakMonth) from tmworkmonth wc28 where wc28.monthtype='02' and wc28.startdate<=e.dimissiondate and wc28.enddate>=e.dimissiondate) as 离职月份  */
+            -->
+            ,e.dimissionmonth 离职月份
+            ,to_char(e.dimissiondate,'YYYY-MM-DD') as 离职日期
+            ,(select codename from ldcode where codetype = 'dimissiontype' and code = e.DIMISSIONTYPE and code in('03','04') ) as 离职性质
+            ,(select wc27.codename from ldcode wc27 where wc27.codetype='newdepartrsn' and wc27.code=e.dimissionreason) as 离职原因
+            ,(select codename from ldcode where codetype = 'yesno' and code = e.AGAINEMPLOY ) as 是否建议重新聘用
+            ,e.remark as 离职具体原因
+            ,(select wc3.codename from ldcode wc3 where wc3.codetype='contracttype' and wc3.code=c.contracttype) as 合同类型
+            ,(select wc4.codename from ldcode wc4 where wc4.codetype='yesno' and wc4.code=c.istraninee) as 是否Trainee
+            ,(select wc5.codename from ldcode wc5 where wc5.codetype='hiretype' and wc5.code=c.hiretype) as Hire_Type
+            ,(select wc5.codename from ldcode wc5 where wc5.codetype='f_recruitcanal' and wc5.code=c.APPLICATION1) as 招聘渠道
+            ,(select wc6.codename from ldcode wc6 where wc6.codetype='channel2' and wc6.code=c.channel) as Channel
+            ,c.postsign as 岗位标识
+            ,case when b.agentgrade in('ACCM','ACCM(P)') and c.istraninee='N'  then 'TMS Headcount' when b.agentgrade in('ACCM','ACCM(P)') and c.istraninee='Y' then 'TMS Trainee' else (select wc7.codename from ldcode wc7 where wc7.codetype='gradetype' and wc7.code=c.gradetype) end as 岗位类别
+            ,decode (b.agentgrade,'ACCM','TMS','ACCM(P)','TMS',(select wc22.codealias from ldcode wc22 where wc22.codetype='f_tmagentgrade' and wc22.code=b.agentgrade)) as 岗位
+            , b.AGENTGRADE as 职位名称英文a
+            ,(select t.ReportsCity from tmmanagecom t where t.managecom = a.managecom) as 城市
+            ,(select t.ReportsRegion from tmmanagecom t where t.managecom = a.managecom) as 区域
+		<!--   //		 				 ,(select wc8.codename from ldcode wc8 where wc8.codetype='city2' and wc8.code=c.city) as 城市
+           //		 				 ,(select wc10.name from tmmanagecom wc10 where wc10.managecom = (select t.upmanagecom from tmmanagecom t where t.managecom = a.managecom)) as 区域
+           -->
+           ,(select wc9.name from tmmanagecom wc9 where wc9.branchtype='1' and wc9.managecom=a.managecom) as 项目
+           ,(select w24.shortname from laagentinfo w24 where w24.agentcode=(select t.agentcode from laagent t where t.branchtype='1' and t.agentnum=c.b1)) as 管理主管英文名
+           ,c.b1 as 管理主管员工编号
+           ,(select w24.shortname from laagentinfo w24 where w24.agentcode=(select t.agentcode from laagent t where t.branchtype='1' and t.agentnum=c.b2)) as 管理经理英文名
+           ,c.b2 as 管理经理员工编号
+           ,c.belongCode as 归属Coach
+           ,c.tmmgr as 项目经理
+           ,c.cityhead as 城市负责人
+           ,(case when d.branchlevel='02' then nvl((select w24.shortname from laagentinfo w24 where w24.agentcode=d.branchmanager),'TBC') else '' end) as  计佣主管英文名
+           ,(case when d.branchlevel='02' then d.branchname else '' end) as 计佣主管团队名称
+           ,decode(d.branchmanager,'','',((case when d.branchlevel='02' then nvl((d.branchname),'') else '' end))) as 计佣主管员工编号
+           ,(case when d.branchlevel='02' then nvl((select w25.shortname from laagentinfo w25, tmbranchgroup we25 where we25.branchtype='1' and w25.agentcode=we25.branchmanager and we25.agentgroup=d.upagentgroup),'TBC') when d.branchlevel='01' then c.shortname else 'TBC' end) as 计佣经理英文名
+           ,(case when d.branchlevel='02' then nvl((select w26.branchname from tmbranchgroup w26 where w26.branchtype='1' and w26.agentgroup=d.upagentgroup),'TBC') when d.branchlevel='01' then d.branchname else '' end) as 计佣经理团队名称
+           ,decode(d.branchmanager,'','',(case when d.branchlevel='02' then nvl((select wc25.agentnum from laagentinfo w25, tmbranchgroup we25,laagent wc25 where wc25.agentcode = w25.agentcode and we25.branchtype='1' and w25.agentcode=we25.branchmanager and we25.agentgroup=d.upagentgroup),'') when d.branchlevel='01' then a.agentnum else '' end)) as 计佣经理员工编号
+           ,to_char(c.TMRtoTMSdate,'YYYY-MM-DD') as TMR晋升TMS日期
+           ,to_char(c.CoachtoTMS1date,'YYYY-MM-DD') as Coach晋升TMS1日期
+           ,c.PusherAgentCode as 内推人员工编号
+           ,a.mobile as 本人手机号码
+           ,(select wd12.codename from ldcode wd12 where wd12.codetype='f_tmidtype' and wd12.code=a.idtype) as 证件类型
+           ,a.idno as 证件号码
+           ,c.Bank as 开户银行
+           ,c.cardNum as 卡号
+           ,c.SocialSecurityPayCity as 社保缴纳城市
+           ,c.SocialSecurityPayAccount as 社保缴纳账户
+           ,a.rgtaddress as 户籍市
+           ,(select wd14.codename from ldcode wd14 where wd14.codetype='tm_householdtype' and wd14.code=c.Householdtype) as 户籍类型
+           ,to_char(c.companyStartDate,'YYYY-MM-DD') as 司龄起算日期
+           ,(select wd10.codename from ldcode wd10 where wd10.codetype='sex' and wd10.code=a.sex) as 性别
+           ,to_char(a.birthday,'YYYY-MM-DD') as 生日
+           ,decode(a.birthday,null,'',(select floor(MONTHS_BETWEEN(sysdate,a.birthday)/12) from dual)) as 年龄
+           ,(select wd20.codename from ldcode wd20 where wd20.codetype='tm_marriage' and wd20.code=a.marriage) as 婚姻状况
+           ,c.Country as 国籍
+           ,(select wd16.codename from ldcode wd16 where wd16.codetype='nationality' and wd16.code=a.nationality) as 民族
+           ,(select wd19.codename from ldcode wd19 where wd19.codetype='polityvisage' and wd19.code=a.polityvisage) as 政治面貌
+           ,c.companyPhone as 公司固定电话
+           ,c.firmMail as 公司邮箱
+           ,a.email as 个人邮箱
+           ,c.emergencyContactName as 紧急联系人姓名
+           ,c.emergencyContactPhone as 紧急联系人手机
+           ,a.phone as 紧急联系人固定电话
+           ,c.OnlyChildCard as 独生子女证
+           ,nvl(unistr(REPLACE(f.b1, '\u', '\')),c.Child1name) as 子女姓名1
+           ,c.Child1Sex as 子女性别1
+           ,to_char(c.Child1Birthday,'YYYY-MM-DD') as 子女出生日期1
+           ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child1Birthday)/12) from dual)) as 子女年龄1
+           ,nvl(unistr(REPLACE(f.b2, '\u', '\')),c.Child2name) as 子女姓名2
+           ,c.Child2Sex as 子女性别2
+           ,to_char(c.Child2Birthday,'YYYY-MM-DD') as 子女出生日期2
+           ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child2Birthday)/12) from dual))as 子女年龄2
+           ,nvl(unistr(REPLACE(f.b3, '\u', '\')),c.Child3name) as 子女姓名3
+           ,c.Child3Sex as 子女性别3
+           ,to_char(c.Child3Birthday,'YYYY-MM-DD') as 子女出生日期3
+           ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child3Birthday)/12) from dual)) as 子女年龄3
+           ,(select wd11.codename from ldcode wd11 where wd11.codetype='degree' and wd11.code=a.degree) as 最高学历
+           ,c.HighestDegree as 最高学位
+           ,a.graduateschool as 毕业院校
+           ,a.speciality as 专业
+           ,to_char(c.AdmissionDate,'YYYY-MM-DD') as 入学时间
+           ,to_char(c.graduationDate,'YYYY-MM-DD') as 毕业时间
+           ,c.isStudent as 是否是学生
+           ,to_char(c.firstJobDate,'YYYY-MM-DD') as 第一次参加工作时间
+           ,to_char(c.joinThePartyDate,'YYYY-MM-DD') as 入党时间
+           ,c.isFormalPartyMember as 预备党员是否转正式党员
+           ,to_char(c.isFormalPartyMemberDate,'YYYY-MM-DD') as 预备党员转正时间
+           ,c.leaveParty as 是否退党
+           ,to_char(c.leavePartyDate,'YYYY-MM-DD') as 退党时间
+           ,c.liveWay as 居住方式
+           ,c.IDCardAddress as 身份证详细住址
+           ,a.homeaddress as 目前住所详细地址
+           ,c.EnglishLevel as 英语等级
+           ,(select wd21.codename from ldcode wd21 where wd21.codetype='posttitle' and wd21.code=a.posttitle) as 职称
+           ,c.skillLevel as 职业技能等级
+           ,a.oldcom as 上一家工作单位
+           ,to_char(c.lastJobStartDate,'YYYY-MM-DD') as 上一家工作开始日期
+           ,to_char(c.lastJobEndDate,'YYYY-MM-DD') as 上一家工作结束日期
+           ,c.application3 as 入职前本职位从业时长年
+           ,to_char(c.SignLaborContractDate,'YYYY-MM-DD') as 实际签订劳动合同日期
+           ,to_char(c.ProbationEndDate,'YYYY-MM-DD') as 试用期到期日
+           ,to_char(c.contractEndDate,'YYYY-MM-DD') as 合同到期日
+           ,c.weChat as 微信
+           ,c.QQ as QQ
+           ,c.postCnName as 职位名称中文
+           ,c.postEnName as 职位名称英文
+           ,c.InsurancePlan as 保险计划
+           ,c.HRCost as HRCost
+           ,c.Disabled as 残障人士
+
+           ,a.quafno as 资格证号ALE证
+           ,to_char(a.quafstartdate,'YYYY-MM-DD') as 资格证有效起期
+           ,to_char(a.quafenddate,'YYYY-MM-DD') as 资格证截止时间
+           ,a.salno as 执业证证件号码
+           ,to_char(a.salstartdate,'YYYY-MM-DD') as 执业证起始时间
+           ,to_char(a.salenddate,'YYYY-MM-DD') as 执业证截止时间
+           ,to_char(c.PracticeOutDate,'YYYY-MM-DD') as 执业证注销时间
+           ,c.agencyName as 所属机构全称
+           ,c.SaleChannelType as 销售渠道类型
+           ,c.BusinessScope as 业务范围
+           ,c.PracticeArea as 执业区域
+           ,c.PayCategory as 报薪类别
+           ,c.establishmentCode as 编制代码
+           ,c.Workplace as 职场
+           ,c.WorkplaceAdress as 职场详细地址
+           ,c.Affiliation as 所属机构
+           ,c.workplacecity as 职场城市
+           ,c.CostCenter as 成本中心
+           ,c.SecFunctionGroup as 二级职能组
+           ,c.Title as 职衔
+           ,(select wc23.codename from ldcode wc23 where wc23.codetype='f_tmagentgrade' and wc23.code=b.agentgrade) as 职级
+           ,c.FirCnDepartment as 一级部门一级团队中文
+           ,c.SecCnDepartment as 二级部门二级团队中文
+           ,c.CnGroup as 组别分公司部门中文
+           ,c.FirEnDepartment as 一级部门一级团队英文
+           ,c.SecEnDepartment as 二级部门二级团队英文
+           ,c.EnGroup as 组别分公司部门英文
+           ,c.CnPosition as 职务名称中文
+           ,b.AGENTGRADE as 职务名称英文
+		<!--     // ,c.EnGroup as 组别分公司部门英文
+             //		 				 ,(select wd14.codename from ldcode wd14 where wd14.codetype='yesno' and wd14.code=a.workflag) as 是否同业
+             //		 				 ,(select wd15.codename from ldcode wd15 where wd15.codetype='yesno' and wd15.code=a.salequaf) as 销售资格
+             -->
+             ,(select wd13.codename from ldcode wd13 where wd13.codetype='yesno' and wd13.code=c.isprotect) as 是否享受保护政策
+             ,b.basesalary as 底薪
+             ,c.MGTsubsidy as 管理津贴
+             ,c.DomainAccount as 域帐号
+             ,c.banksn as 银行工号
+             ,c.Insurersn as 保险工号
+             ,c.FWbanksn as 食行天下银行工号
+             ,c.yearpaybanksn as 年费银行工号
+             ,c.ValueAddedSort as 增值分类
+             ,to_char(c.b5,'YYYY-MM-DD') as 调动生效日期
+             ,a.remark as 备注
+             ,'SMART' as 系统标识
+             ,(case  when c.postsign in(select codename from ldcode l1 where l1.codetype='postsigntype') then '是' when b.AGENTGRADE in(select codename from ldcode l1 where l1.codetype='agentgradetype') then '是' else '否' end) as 是否发放高温津贴
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child1type) as 子女证件类型1
+             ,c.child1no as 子女证件号码1
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child2type) as 子女证件类型2
+             ,c.child2no as 子女证件号码2
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child3type) as 子女证件类型3
+             ,c.child3no as 子女证件号码3
+             ,nvl(unistr(REPLACE(f.b4, '\u', '\')),c.Child4name) as 子女姓名4
+             ,c.Child4Sex as 子女性别4
+
+		,to_date(to_char(c.Child4Birthday,'YYYY-MM-DD'),'YYYY-MM-DD') as 子女出生日期4
+             ,to_char((select floor(MONTHS_BETWEEN(sysdate,c.Child4Birthday)/12) from dual)) as 子女年龄4
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = c.child4type) as 子女证件类型4
+             ,c.child4no as 子女证件号码4
+             from laagent a,latree b,laagentinfo c,tmbranchgroup d,tmdimission e,agentunicode f , tmlaagentc g
+             where a.branchtype='1' and a.agentstate in ('02','03','04') and a.agentcode = g.agentcode
+             and b.branchtype='1' and a.agentcode=b.agentcode
+             and a.agentcode=c.agentcode
+             and a.agentnum=f.agentnum(+)
+             and d.branchtype='1' and a.agentgroup=d.agentgroup
+             and e.branchtype='1' and a.agentcode=e.agentcode
+             <if test="lastMonth!=null and lastMonth!=''">
+				 and g.bakmonth = #{lastMonth}
+			 </if>
+
+            union all
+
+             select g.bakmonth as  bakmonth,
+             '' as 员工代码
+             ,a.AGENTNUM as  员工编号
+             ,'' as 员工工号
+             ,nvl(unistr(REPLACE(a.name, '\u', '')),a.name) as 中文名
+             ,a.EnName as  英文名
+             ,a.AGENTSTATE as  员工状态
+             ,'' as 入职月份
+             ,to_char(a.EMPLOYDATE,'YYYY-MM-DD') as 入职日期
+             ,'' as 转正日期
+             ,'' as 培训批次
+             ,'' as 上线日期
+             ,'' as 项目变更变上线日期
+             ,'' as 是否Rehire
+             ,'' as 培训起始时间
+             ,'' as 培训结束时间
+             ,to_char(a.DIMISSIONDATE,'YYYYMM') as 离职月份
+             ,to_char(a.DIMISSIONDATE,'YYYY-MM-DD') as 离职日期
+             ,a.DIMISSIONTYPE as 离职性质
+             ,a.DIMISSIONREASON as 离职原因
+             ,a.AGAINEMPLOY as 是否建议重新聘用
+             ,a.dimissionRemark as 离职具体原因
+             ,a.contracttype as  合同类型
+             ,'' as 是否Trainee
+             ,'' as Hire_Type
+             ,'' as 招聘渠道
+             ,'' as Channel
+             ,'' as 岗位标识
+             ,'' as 岗位类别
+             ,'' as  岗位
+             ,a.postEnName as  职位名称英文a
+             ,(select w1.ReportsCity from tmmanagecom w1 where w1.branchtype='1' and w1.name=a.sponsor) as 城市
+             ,(select w1.ReportsRegion from tmmanagecom w1 where w1.branchtype='1' and w1.name=a.sponsor) as 区域
+             ,a.sponsor as 项目
+             ,'' as 管理主管英文名
+             ,'' as 管理主管员工编号
+             ,'' as 管理经理英文名
+             ,'' as 管理经理员工编号
+             ,'' as 归属Coach
+             ,'' as 项目经理
+             ,'' as 城市负责人
+             ,'' as 计佣主管英文名
+             ,'' as 计佣主管团队名称
+             ,'' as 计佣主管员工编号
+             ,'' as 计佣经理英文名
+             ,'' as 计佣经理团队名称
+             ,'' as 计佣经理员工编号
+             ,'' as TMR晋升TMS日期
+             ,'' as Coach晋升TMS1日期
+             ,'' as 内推人员工编号
+             ,a.MOBILE as  本人手机号码
+             ,'' as 证件类型
+             ,a.idno as  证件号码
+             ,a.Bank as  开户银行
+             ,a.cardNum as  卡号
+             ,a.SocialSecurityPayCity as  社保缴纳城市
+             ,a.SocialSecurityPayAccount as  社保缴纳账户
+             ,a.rgtaddress as  户籍市
+             ,a.Householdtype as  户籍类型
+             ,to_char(a.companyStartDate,'YYYY-MM-DD') as  司龄起算日期
+             ,a.sex as  性别
+             ,to_char(a.birthday,'YYYY-MM-DD') as  生日
+             ,decode(a.birthday,null,'',(select floor(MONTHS_BETWEEN(sysdate,a.birthday)/12) from dual)) as 年龄
+             ,a.marriage as  婚姻状况
+             ,a.Country as  国籍
+             ,a.nationality as  民族
+             ,a.polityvisage as  政治面貌
+             ,a.companyPhone as 公司固定电话
+             ,a.firmMail as 公司邮箱
+             ,a.email as 个人邮箱
+             ,a.emergencyContactName as  紧急联系人姓名
+             ,a.emergencyContactPhone as  紧急联系人手机
+             ,a.phone as 紧急联系人固定电话
+             ,a.OnlyChildCard as  独生子女证
+             ,nvl(unistr(REPLACE(a.Child1name, '\u', '')),a.Child1name) as 子女姓名1
+             ,a.Child1Sex as 子女性别1
+             ,to_char(a.Child1Birthday,'YYYY-MM-DD') as 子女出生日期1
+             ,to_char((select floor(MONTHS_BETWEEN(sysdate,a.Child1Birthday)/12) from dual)) as 子女年龄1
+             ,nvl(unistr(REPLACE(a.Child2name, '\u', '')),a.Child2name) as 子女姓名2
+             ,a.Child2Sex as 子女性别2
+             ,to_char(a.Child2Birthday,'YYYY-MM-DD') as 子女出生日期2
+             ,to_char((select floor(MONTHS_BETWEEN(sysdate,a.Child2Birthday)/12) from dual)) as 子女年龄2
+             ,nvl(unistr(REPLACE(a.Child3name, '\u', '')),a.Child3name) as 子女姓名3
+             ,a.Child3Sex as 子女性别3
+             ,to_char(a.Child3Birthday,'YYYY-MM-DD') as 子女出生日期3
+             ,to_char((select floor(MONTHS_BETWEEN(sysdate,a.Child3Birthday)/12) from dual)) as 子女年龄3
+             ,a.degree as  最高学历
+             ,a.HighestDegree as 最高学位
+             ,a.GRADUATESCHOOL as  毕业院校
+             ,a.speciality as  专业
+             ,'' as  入学时间
+             ,to_char(a.graduationDate,'YYYY-MM-DD') as  毕业时间
+             ,'' as 是否是学生
+             ,to_char(a.firstJobDate,'YYYY-MM-DD') as  第一次参加工作时间
+             ,to_char(a.joinThePartyDate,'YYYY-MM-DD') as 入党时间
+             ,'' as 预备党员是否转正式党员
+             ,to_char(a.isFormalPartyMemberDate,'YYYY-MM-DD') as  预备党员转正时间
+             ,'' as 是否退党
+             ,to_char(a.leavePartyDate,'YYYY-MM-DD') as 退党时间
+             ,a.liveWay as 居住方式
+             ,a.IDCardAddress as  身份证详细住址
+             ,a.homeaddress as  目前住所详细地址
+             ,a.EnglishLevel as 英语等级
+             ,a.posttitle as 职称
+             ,a.skillLevel as 职业技能等级
+             ,a.oldcom as  上一家工作单位
+             ,'' as 上一家工作开始日期
+             ,'' as 上一家工作结束日期
+             ,to_char(a.application3) as 入职前本职位从业时长年
+             ,'' as 实际签订劳动合同日期
+             ,to_char(a.ProbationEndDate,'YYYY-MM-DD') as  试用期到期日
+             ,to_char(a.contractEndDate,'YYYY-MM-DD') as  合同到期日
+             ,a.weChat as 微信
+             ,to_char(a.QQ) as QQ
+             ,a.postCnName as  职位名称中文
+             ,a.postEnName as  职位名称英文
+             ,a.InsurancePlan as 保险计划
+             ,a.HRCost as HRCost
+             ,a.Disabled as 残障人士
+             ,'' as 资格证号ALE证
+             ,'' as 资格证有效起期
+             ,'' as 资格证截止时间
+             ,'' as 执业证证件号码
+             ,'' as 执业证起始时间
+             ,'' as 执业证截止时间
+             ,'' as 执业证注销时间
+             ,'' as 所属机构全称
+             ,'' as 销售渠道类型
+             ,'' as 业务范围
+             ,'' as 执业区域
+             ,a.PayCategory as  报薪类别
+             ,a.establishmentCode as  编制代码
+             ,a.Workplace as  职场
+             ,a.WorkplaceAdress as  职场详细地址
+             ,a.Affiliation as  所属机构
+             ,a.WorkplaceCity as  职场城市
+             ,a.CostCenter as  成本中心
+             ,a.SecFunctionGroup as  二级职能组
+             ,a.Title as  职衔
+             ,a.agentgrade as  职级
+             ,a.FirCnDepartment as  一级部门一级团队中文
+             ,a.SecCnDepartment as  二级部门二级团队中文
+             ,a.CnGroup as 组别分公司部门中文
+             ,a.FirEnDepartment as  一级部门一级团队英文
+             ,a.SecEnDepartment as  二级部门二级团队英文
+             ,a.EnGroup as 组别分公司部门英文
+             ,a.CnPosition as  职务名称中文
+             ,a.EnPosition as  职务名称英文
+             ,'' as 是否享受保护政策
+             ,0.00 as 底薪
+             ,'' as 管理津贴
+             ,'' as 域帐号
+             ,'' as 银行工号
+             ,'' as 保险工号
+             ,'' as 食行天下银行工号
+             ,'' as 年费银行工号
+             ,'' as 增值分类
+             ,'' as 调动生效日期
+             ,'' as 备注
+             ,'HRIS' as 系统标识
+             ,(case when a.WARMSUBSY= 'Y' then '是' else '否' end) as 是否发放高温津贴
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = a.child1type) as 子女证件类型1
+             ,a.child1no as 子女证件号码1
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = a.child2type) as 子女证件类型2
+             ,a.child2no as 子女证件号码2
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = a.child3type) as 子女证件类型3
+             ,a.child3no as 子女证件号码3
+             ,nvl(unistr(REPLACE(a.Child4name, '\u', '')),a.Child4name) as 子女姓名4
+             ,a.Child4Sex as 子女性别4
+             ,to_date(to_char(a.Child4Birthday,'YYYY-MM-DD'),'YYYY-MM-DD') as 子女出生日期4
+             ,to_char((select floor(MONTHS_BETWEEN(sysdate,a.Child4Birthday)/12) from dual)) as 子女年龄4
+             ,(select wd19.codename from ldcode wd19 where wd19.codetype = 'relationshiptype' and wd19.code = a.child4type) as 子女证件类型4
+             ,a.child4no as 子女证件号码4
+             from agentinfo_hris a, tmlaagentc g   where 1=1 and a.agentnum = (select w.agentnum from laagent w where w.agentcode = g.agentcode )
+			<if test="lastMonth!=null and lastMonth!=''">
+				and g.bakmonth = #{lastMonth}
+			</if>
+         </insert>
+
+
+	<delete id="deleteTmAgentTotal">
+		delete from  TMAGENTTotal a where a.bakmonth= #{lastMonth}
+	</delete>
+
+	<insert id="insertTmAgentTotal">
+		insert into tmagenttotal
+		with xx as (select q.code, decode(q.code, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', q.codealias) as posttype
+		from ldcode q
+		where q.codetype = 'f_tmagentgrade')
+		select 月结年月,
+		渠道,
+		区域,
+		城市,
+		项目,
+		岗位,
+		月初数,
+		被动离职,
+		主动离职,
+		离职合计,
+		新入职,
+		调入合计,
+		调出合计,
+		(月初数 - 离职合计 + 新入职 + 调入合计 - 调出合计) as 月底数,
+		#{operator},
+		#{operator},
+		basic.CurrentDate,
+		basic.CurrentTime,
+		basic.CurrentDate,
+		basic.CurrentTime
+		from (select a.bakmonth                                                                                                 as 月结年月,
+		nvl((select l.codename from ldcode l where l.codetype = 'channel2' and l.code = a.channel),
+		' ')                                                                                                   as 渠道,
+		nvl((select t.ReportsRegion from tmmanagecom t where t.managecom = a.managecom),
+		' ')                                                                                                   as 区域,
+		(select w1.reportscity
+		from tmmanagecom w1
+		where w1.managecom = a.managecom)                                                                         as 城市,
+		(select b.shortname
+		from tmmanagecom b
+		where b.managecom = a.managecom)                                                                          as 项目,
+		xx.posttype                                                                                                as 岗位,
+		nvl((select tm.endnum
+		from TMAGENTTotal tm
+		where tm.bakmonth = to_char(add_months(to_date(a.bakmonth, 'yyyymm'), -1), 'yyyymm')
+		and tm.channel =
+		(select l.codename from ldcode l where l.codetype = 'channel2' and l.code = a.channel)
+		and tm.managecom = (select b.shortname from tmmanagecom b where b.managecom = a.managecom)
+		and tm.gradelevel = xx.posttype),
+		0)                                                                                                     as 月初数,
+		(select count(*)
+		from tmdimission e
+		where e.dimissiontype = '03'
+		and e.dimissionmonth =#{lastMonth}
+		and e.type = '01'
+		and e.managecom = a.managecom
+		and ((select ww.channel
+		from tmlaagentc ww
+		where ww.agentcode = e.agentcode
+		and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = ww.agentcode and aginfo.postsign like '%虚拟账号%')
+		and ww.bakmonth = #{lastMonth}) = a.channel)
+		and (select xx.posttype
+		from xx
+		where code = (select la.agentgrade from latree la where la.agentcode = e.agentcode)) =
+		xx.posttype)                                                                                        as 被动离职,
+		(select count(*)
+		from tmdimission e
+		where e.dimissiontype = '04'
+		and e.dimissionmonth = #{lastMonth}
+		and e.type = '01'
+		and e.managecom = a.managecom
+		and ((select ww.channel
+		from tmlaagentc ww
+		where ww.agentcode = e.agentcode
+		and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = ww.agentcode and aginfo.postsign like '%虚拟账号%')
+		and ww.bakmonth = #{lastMonth}) = a.channel)
+		and (select xx.posttype
+		from xx
+		where code = (select la.agentgrade from latree la where la.agentcode = e.agentcode)) =
+		xx.posttype)                                                                                        as 主动离职,
+		(select count(*)
+		from tmdimission e
+		where e.dimissionmonth =#{lastMonth}
+		and e.managecom = a.managecom
+		and e.type = '01'
+		and ((select ww.channel
+		from tmlaagentc ww
+		where ww.agentcode = e.agentcode
+		and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = ww.agentcode and aginfo.postsign like '%虚拟账号%')
+		and ww.bakmonth = #{lastMonth}) = a.channel)
+		and (select xx.posttype
+		from xx
+		where code = (select la.agentgrade from latree la where la.agentcode = e.agentcode)) =
+		xx.posttype)                                                                                        as 离职合计,
+		(select count(*)
+		from laagent f
+		where (select la.APPLICATION2 from laagentinfo la where f.agentcode = la.agentcode) = #{lastMonth}
+		and f.managecom = a.managecom
+		and (select la.channel from laagentinfo la where f.agentcode = la.agentcode) = a.channel
+		and (select xx.posttype
+		from xx
+		where code = (select la.agentgrade from latree la where la.agentcode = f.agentcode)) =
+		xx.posttype)                                                                                        as 新入职,
+		(select count(1)
+		from tmlaagentc g
+		where (g.managecom = a.managecom and g.channel = a.channel and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = g.agentcode
+		and aginfo.postsign like '%虚拟账号%') and
+		decode(g.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', G.GRADELEVEL) = xx.posttype and
+		g.bakmonth = a.bakmonth and exists(select 1
+		from tmlaagentc c1
+		where c1.bakmonth =
+		to_char(add_months(to_date(a.bakmonth, 'yyyymm'), -1), 'yyyymm')
+		and g.agentcode = c1.agentcode
+		and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = c1.agentcode
+		and aginfo.postsign like '%虚拟账号%')
+		and g.managecom ||
+		decode(g.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', G.GRADELEVEL) ||
+		g.channel || g.city  <![CDATA[ <> ]]> c1.managecom ||
+		decode(C1.agentgrade, 'ACCM',
+		'TMS', 'ACCM(P)', 'TMS',
+		C1.GRADELEVEL) ||
+		c1.channel || c1.city))
+		or (g.managecom = a.managecom and g.channel = a.channel and
+		decode(g.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', G.GRADELEVEL) = xx.posttype and
+		g.bakmonth = a.bakmonth and g.agentcode = (select la.agentcode
+		from laagentinfo la
+		where g.agentcode = la.agentcode
+		and la.APPLICATION2  <![CDATA[ < ]]> #{lastMonth}) and
+		not exists(select 1
+		from tmlaagentc c1
+		where c1.bakmonth = to_char(add_months(to_date(a.bakmonth, 'yyyymm'), -1), 'yyyymm')
+		and g.agentcode = c1.agentcode) and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = g.agentcode
+		and aginfo.postsign like '%虚拟账号%'))) as 调入合计,
+		(select count(1)
+		from tmlaagentc g,
+		tmlaagentc c1
+		where (g.managecom || decode(g.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', G.GRADELEVEL) || g.channel  <![CDATA[ <> ]]>
+		a.managecom || xx.posttype || a.channel and a.bakmonth = g.bakmonth and
+		g.agentcode = c1.agentcode and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = g.agentcode
+		and aginfo.postsign like '%虚拟账号%') and not exists(
+		select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = c1.agentcode and aginfo.postsign like '%虚拟账号%') and
+		c1.bakmonth = to_char(add_months(to_date(a.bakmonth, 'yyyymm'), -1), 'yyyymm') and
+		c1.managecom = a.managecom and
+		decode(c1.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', c1.GRADELEVEL) = xx.posttype and
+		c1.channel = a.channel)
+		or (g.managecom = a.managecom and g.channel = c1.channel and a.channel = g.channel AND
+		G.MANAGECOM = C1.MANAGECOM and
+		decode(g.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', G.GRADELEVEL) = xx.posttype and
+		a.bakmonth = g.bakmonth and g.agentcode = c1.agentcode and
+		c1.bakmonth = to_char(add_months(to_date(a.bakmonth, 'yyyymm'), -1), 'yyyymm') and
+		g.agentcode = (select e.agentcode
+		from tmdimission e
+		where e.agentcode = g.agentcode
+		and e.dimissionmonth = #{lastMonth}
+		and e.type = '02'
+		and e.managecom = a.managecom
+		and ((select ww.channel
+		from tmlaagentc ww
+		where ww.agentcode = e.agentcode
+		and not exists(select 1
+		from laagentinfo aginfo
+		where aginfo.agentcode = ww.agentcode
+		and aginfo.postsign like '%虚拟账号%')
+		and ww.bakmonth = #{lastMonth}) =
+		a.channel))))                                                                as 调出合计
+		from tmlaagentc a,
+		xx
+		where a.bakmonth = #{lastMonth}
+		and a.agentgrade = xx.code
+		and not exists(
+		select 1 from laagentinfo aginfo where aginfo.agentcode = a.agentcode and aginfo.postsign like '%虚拟账号%')
+		group by a.bakmonth, a.channel, a.managecom, xx.posttype)
+	</insert>
+
+
+
+     </mapper>

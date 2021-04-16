@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmCbRcAgentWarningMapper">
+
+    <select id="countRecruitmentActive" resultType="java.lang.Integer">
+        select (
+        (
+
+        select count(1)
+        from tmagentinfotozbx a, laagent b, tmmanagecom c, laagentinfo d, laagentgrade e
+        where a.agentnum = b.agentnum
+        and d.postenname = e.gradecode
+        and a.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and a.salno is null
+        and b.agentstate = '01'
+        and b.employdate &lt;= trunc(sysdate) - 5
+        and substr(c.shortname, -3) &lt;> '211'
+        and nvl(d.postsign, '##') &lt;> 'TMR-招聘'
+        and e.noti &lt;> 'CCM'
+
+        ) + (
+
+        select count(1)
+        from tmagentinfotozbx a, laagent b, tmmanagecom c, laagentinfo d, laagentgrade e
+        where a.agentnum = b.agentnum
+        and d.postenname = e.gradecode
+        and b.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and a.salno is not null
+        and b.employdate >= date'2019-05-01'
+        and b.agentstate = '01'
+        and exists (
+        select 1
+        from tmagentinfotozbx x
+        where a.salno = x.salno
+        and a.city &lt;> x.city
+        )
+
+        ) + (
+
+        select count(1)
+        from tmagentinfotozbx a, laagent b, tmmanagecom c, laagentinfo d, laagentgrade e
+        where a.agentnum = b.agentnum
+        and d.postenname = e.gradecode
+        and b.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and a.salno is not null
+        and a.city = 'SH'
+        and b.employdate >= date'2019-05-01'
+        and b.agentstate = '01'
+        and exists (
+        select 1
+        from tmagentinfotozbx x
+        where a.salno = x.salno
+        and a.channel &lt;> x.channel
+        )
+
+        )
+        ) from dual
+    </select>
+
+    <select id="selectRecruitmentActive" resultType="java.util.Map">
+        select
+        a.AGENTNUM,
+        a.AGENTSN,
+        a.NAME,
+        c.SHORTNAME,
+        c.REPORTSCITY,
+        e.NOTI,
+        a.SALNO,
+        b.SALSTARTDATE,
+        b.SALENDDATE,
+        d.PRACTICEOUTDATE,
+        c.name as MANAGECOMNAME,
+        d.SALECHANNELTYPE,
+        d.BUSINESSSCOPE,
+        d.PRACTICEAREA,
+        case
+        when a.agentsn = d.agentsn then '最新工号对应的执业证号码为空，需在招聘培训人员信息模块中补充'
+        else '历史工号对应的执业证号码为空，需在银保监销售人员上报数据模块中补充'
+        end as WARNINGTYPE
+        from tmagentinfotozbx a, laagent b, tmmanagecom c, laagentinfo d, laagentgrade e
+        where a.agentnum = b.agentnum
+        and d.postenname = e.gradecode
+        and a.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and a.salno is null
+        and b.agentstate = '01'
+        and b.employdate &lt;= trunc(sysdate) - 5
+        and substr(c.shortname, -3) &lt;> '211'
+        and nvl(d.postsign, '##') &lt;> 'TMR-招聘'
+        and e.noti &lt;> 'CCM'
+
+        union all
+
+        select
+        a.agentnum,
+        a.agentsn,
+        a.name,
+        c.shortname,c.reportscity,
+        e.noti,
+        a.salno,
+        b.salstartdate,
+        b.salenddate as 执业证截止日期,
+        d.Practiceoutdate as 执业证注销日期,
+        c.name,
+        d.salechanneltype,
+        d.businessscope,
+        d.practicearea,
+        '跨城市执业证号码相同' as warningType
+        from tmagentinfotozbx a, laagent b, tmmanagecom c, laagentinfo d, laagentgrade e
+        where a.agentnum = b.agentnum
+        and d.postenname = e.gradecode
+        and b.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and a.salno is not null
+        and b.employdate >= date'2019-05-01'
+        and b.agentstate = '01'
+        and exists (
+        select 1
+        from tmagentinfotozbx x
+        where a.salno = x.salno
+        and a.city &lt;> x.city
+        )
+
+        union all
+
+        select
+        a.agentnum,
+        a.agentsn,
+        a.name,
+        c.shortname,
+        c.reportscity,
+        e.noti,
+        a.salno,
+        b.salstartdate,
+        b.salenddate as 执业证截止日期,
+        d.Practiceoutdate as 执业证注销日期,
+        c.name,
+        d.salechanneltype,
+        d.businessscope,
+        d.practicearea,
+        '上海跨渠道执业证号码相同' as warningType
+        from tmagentinfotozbx a, laagent b, tmmanagecom c, laagentinfo d, laagentgrade e
+        where a.agentnum = b.agentnum
+        and d.postenname = e.gradecode
+        and b.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and a.salno is not null
+        and a.city = 'SH'
+        and b.employdate >= date'2019-05-01'
+        and b.agentstate = '01'
+        and exists (
+        select 1
+        from tmagentinfotozbx x
+        where a.salno = x.salno
+        and a.channel &lt;> x.channel
+        )
+    </select>
+
+    <select id="countRecruitmentResigned" resultType="java.lang.Integer">
+        select count(1)
+        from
+        tmagentinfotozbx a,
+        laagent          b,
+        tmmanagecom      c,
+        laagentinfo      d,
+        tmdimission      e,
+        laagentgrade f
+        where a.agentnum = b.agentnum
+        and b.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and b.agentcode = e.agentcode
+        and d.postenname = f.gradecode
+        and a.salno is not null
+        and e.dimissiondate >= date'2019-05-01'
+        and e.dimissiondate &lt;= trunc(sysdate) - 5
+        and b.agentstate = '03'
+        and d.practiceoutdate is null
+        and a.agentsn = d.agentsn
+    </select>
+
+    <select id="selectRecruitmentResigned" resultType="java.util.Map">
+        select
+        a.AGENTNUM,
+        a.AGENTSN,
+        a.NAME,
+        c.SHORTNAME,
+        c.REPORTSCITY,
+        f.NOTI,
+        a.SALNO,
+        b.SALSTARTDATE,
+        b.SALENDDATE,
+        d.PRACTICEOUTDATE,
+        c.name as MANAGECOMNAME,
+        d.SALECHANNELTYPE,
+        d.BUSINESSSCOPE,
+        d.PRACTICEAREA,
+        '离职人员执业证注销日期为空' as WARNINGTYPE
+        from
+        tmagentinfotozbx a,
+        laagent          b,
+        tmmanagecom      c,
+        laagentinfo      d,
+        tmdimission      e,
+        laagentgrade f
+        where a.agentnum = b.agentnum
+        and b.managecom = c.managecom
+        and b.agentcode = d.agentcode
+        and b.agentcode = e.agentcode
+        and d.postenname = f.gradecode
+        and a.salno is not null
+        and e.dimissiondate >= date'2019-05-01'
+        and e.dimissiondate &lt;= trunc(sysdate) - 5
+        and b.agentstate = '03'
+        and d.practiceoutdate is null
+        and a.agentsn = d.agentsn
+    </select>
+
+</mapper>

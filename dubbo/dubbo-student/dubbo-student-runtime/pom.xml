@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>dubbo-student</artifactId>
+        <groupId>org.example</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>dubbo-student-runtime</artifactId>
+    <dependencies>
+        <!-- 必须引入，否则无接口404 -->
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>dubbo-student-controller</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 必须放入实现依赖，否则即使有了dubbo-reference引用，但是并没有把实现加入dubbo和spring框架 -->
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>dubbo-student-service</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+</project>

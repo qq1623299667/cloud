@@ -1,0 +1,17 @@
+server:
+  port: 10000 #服务注册中心端口号
+spring:
+  application:
+    name: eureka
+eureka:
+  instance:
+    hostname: 127.0.0.1 #服务注册中心IP地址
+#    将IP注册到Eureka Server上，而如果不配置就是机器的主机名。
+    prefer-ip-address: true
+  #    自定义应用id
+    instance-id: ${spring.cloud.client.ip-address}:${spring.application.name}:${server.port}:@project.version@
+  client:
+    registerWithEureka: false #是否向服务注册中心注册自己
+    fetchRegistry: false #是否检索服务
+    serviceUrl: #服务注册中心的配置内容，指定服务注册中心的位置
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/

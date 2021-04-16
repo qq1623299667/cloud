@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmChargeToWeChatMapper">
+
+    <delete id="deleteWeChatContChargeTotal">
+        delete from Wechatcontchargetotal a
+        where exists (
+        select 1
+        from Wechatcontchargedetail b, tmcontcharge d, tmcontpay c
+        where a.billdate = b.billdate
+        and d.contpaysn = c.contpaysn
+        and b.contpaysn = c.contpaysn
+        and (d.modifydate = trunc(sysdate - 1) or a.billdate = date'${csvDate}')
+        and d.settlementsponsor = c.settlementsponsor
+        and c.settlementsponsor IN ('WBWGJ', 'WGJZY')
+        ) or a.billdate = date'${csvDate}'
+    </delete>
+
+    <delete id="deleteWeChatContChargeDetail">
+        delete from Wechatcontchargedetail a
+        where exists (
+        select 1
+        from tmcontcharge b, tmcontpay c
+        where b.contpaysn = c.contpaysn
+        and b.settlementsponsor = c.settlementsponsor
+        and b.settlementsponsor in ('WGJZY', 'WBWGJ')
+        and a.contpaysn = c.contpaysn
+        and (b.modifydate = trunc(sysdate - 1) or a.billdate = date'${csvDate}')
+        )
+    </delete>
+
+    <insert id="insertWeChatContChargeTotal">
+        insert into WECHATCONTCHARGETOTAL (
+        BATCHSN,
+        BILLDATE,
+        TOTALNUMBER,
+        TOTALAMOUNT,
+        TOTALCALCULATEPREMIUM,
+        CHARGETYPE,
+        MAKEDATE,
+        MAKETIME,
+        MODIFYDATE,
+        MODIFYTIME,
+        state
+        )
+        select decode(a.type, 'Billing', 'BL', 'Refund', 'RE') || to_char(a.csvdate,'yyyymmdd') || '${batchSn}',
+        a.csvdate,
+        count(1),
+        (
+        select sum(b.contcharge * 100)
+        from tmcontcharge b, tmcontpay c
+        where b.contpaysn = c.contpaysn
+        and b.settlementsponsor IN ('WBWGJ', 'WGJZY')
+        and a.csvdate = c.csvdate
+        and a.type = c.type
+        ),
+        (
+        select sum(b.calbasemoney * 100)
+        from tmcontcharge b, tmcontpay c
+        where b.contpaysn = c.contpaysn
+        and b.settlementsponsor IN ('WBWGJ', 'WGJZY')
+        and a.csvdate = c.csvdate
+        and a.type = c.type
+        ),
+        decode(a.type, 'Billing', '01', 'Refund', '02'),
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime,
+        '00'
+        from tmcontpay a
+        where (
+        a.csvdate = date'${csvDate}'
+        or exists (
+        select 1
+        from tmcontcharge x
+        where x.contpaysn = a.contpaysn
+        and x.modifydate = trunc(sysdate - 1)
+        )
+        )
+        and a.settlementsponsor IN ('WBWGJ', 'WGJZY')
+        group by a.csvdate, a.type
+    </insert>
+
+    <insert id="insertWeChatContChargeDetailBilling">
+        insert into Wechatcontchargedetail (
+        indexsn,
+        BATCHSN,
+        BILLDATE,
+        POLICYNO,
+        CONTPAYSN,
+        POLICYIND,
+        PRODUCTCODE,
+        PRODUCTNAME,
+        POLICYPREMIUM,
+        MODXSEQUENCE,
+        POLICYCOMMISSION,
+        COMMISSIONTYPE,
+        COMMISSIONRATE,
+        DEDUCTTYPE,
+        DEDUCTDATE,
+        deductAmount,
+        DEDUCTPREMIUM,
+        BUSINESSID,
+        CHARGETYPE,
+        MAKEDATE,
+        MAKETIME,
+        MODIFYDATE,
+        MODIFYTIME,
+        state
+        )
+        select TO_CHAR(createmaxno('WECHATD', 'SN'), 'FM0000000000'),
+        'BL' || to_char(a.csvdate,'yyyymmdd') || '${batchSn}',
+        a.csvdate,
+        a.contno,
+        a.contpaysn,
+        'P' as policyInd,
+        d.mainriskcode,
+        (
+        select e.riskname
+        from lmriskapp_icis e
+        where e.riskcode = d.mainriskcode
+        group by e.riskcode, e.riskname
+        ),
+        sum(a.amount*100),
+        DECODE(A.PAYINTV,
+        0, '0101D',
+        to_char(a.payyear,'FM00') || to_char(case
+        when mod(a.paycount, 12 / a.payintv) = 0 then 12 / a.payintv
+        else mod(a.paycount, 12 / a.payintv)
+        end,'FM00') || decode(a.payintv, 1, 'M', 3, 'Q', 6, 'H', 12, 'Y')
+        ),
+        sum(c.contcharge * 100),
+        decode(c.calflag, '0', '1', '2') as commissionType,
+        c.rate,
+        '' as deductType,
+        '' as deductDate,
+        null deductAmount,
+        null as deductPremium,
+        '' as businessId,
+        '01',
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime,
+        '00'
+        from tmcontpay a
+        left join tmcontcharge c on (a.contpaysn = c.contpaysn)
+        left join tmlccont d on ( a.contno = d.contno )
+        where a.type = 'Billing'
+        and a.settlementsponsor IN ('WBWGJ', 'WGJZY')
+        and (
+        a.csvdate = date'${csvDate}'
+        or exists (
+        select 1
+        from tmcontcharge x
+        where x.contpaysn = a.contpaysn
+        and x.modifydate = trunc(sysdate - 1)
+        )
+        )
+        and not exists (select 1 from Wechatcontchargedetail d where d.contpaysn = a.contpaysn)
+        group by a.csvdate, a.contno, a.contpaysn, d.mainriskcode,
+        a.payyear, a.paycount, a.payintv, c.calflag,
+        c.rate, d.orderno
+    </insert>
+
+    <insert id="insertWeChatContChargeDetailRefund">
+        insert into Wechatcontchargedetail (
+        indexsn,
+        BATCHSN,
+        BILLDATE,
+        POLICYNO,
+        CONTPAYSN,
+        POLICYIND,
+        PRODUCTCODE,
+        PRODUCTNAME,
+        POLICYPREMIUM,
+        MODXSEQUENCE,
+        POLICYCOMMISSION,
+        COMMISSIONTYPE,
+        COMMISSIONRATE,
+        DEDUCTTYPE,
+        DEDUCTDATE,
+        deductAmount,
+        DEDUCTPREMIUM,
+        BUSINESSID,
+        CHARGETYPE,
+        MAKEDATE,
+        MAKETIME,
+        MODIFYDATE,
+        MODIFYTIME,
+        state
+        )
+        select TO_CHAR(createmaxno('WECHATD', 'SN'), 'FM0000000000'),
+        'RE' || to_char(a.csvdate, 'yyyymmdd') || '${batchSn}',
+        a.csvdate,
+        a.contno,
+        a.contpaysn,
+        '' as policyInd,
+        d.mainriskcode AS productCode ,
+        (
+        select e.riskname
+        from lmriskapp_icis e
+        where e.riskcode = d.mainriskcode
+        group by e.riskcode, e.riskname
+        ) AS productName,
+        NULL AS policyPremium,
+        '' AS modxSequence,
+        NULL AS policyCommission,
+        '' as commissionType,
+        NULL AS commissionRate,
+        case
+        when a.state = '0' then '1'
+        when a.state = '4' and a.statereason ='06' then '3'
+        when a.state = '4' and a.statereason in ('02','05') then '4'
+        else '6'
+        end as deductType,
+        D.modifydate as deductDate,
+        sum(c.contcharge * 100) as deductAmount,
+        sum(a.amount * 100) as deductPremium,
+        '' as businessId,
+        '02',
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime,
+        '00'
+        from tmcontpay a
+        left join tmcontcharge c on (a.contpaysn = c.contpaysn)
+        left join tmlccont d on (a.contno = d.contno)
+        where a.type = 'Refund'
+        and a.settlementsponsor IN ('WBWGJ', 'WGJZY')
+        and (
+        a.csvdate = date'${csvDate}'
+        or exists (
+        select 1
+        from tmcontcharge x
+        where x.contpaysn = a.contpaysn
+        and x.modifydate = trunc(sysdate - 1)
+        )
+        )
+        group by a.csvdate, a.contno, a.contpaysn, d.orderno,
+        d.mainriskcode, a.state, a.statereason, D.modifydate
+    </insert>
+
+</mapper>

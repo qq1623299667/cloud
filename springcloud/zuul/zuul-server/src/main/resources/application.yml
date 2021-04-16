@@ -1,0 +1,48 @@
+server:
+  port: 5000
+spring:
+  application:
+    name: zuul-server
+  main:
+    allow-bean-definition-overriding: true
+zuul:
+  routes:
+    #标识你服务的名字，这里可以自己定义，一般方便和规范来讲还是跟自己服务的名字一样
+#    访问localhost:5000/hello-service/test/zuul可以得到结果:from zuul
+    hello-service:
+      #服务映射的路径，通过这路径就可以从外部访问你的服务了，目的是为了不爆露你机器的IP，面向服务的路由了，给你选一个可用的出来，
+      #这里zuul是自动依赖hystrix，ribbon的，不是面向单机
+      path: /hello-service/**
+      #这里一定要是你Eureka注册中心的服务的名称，是所以这里配置serviceId因为跟eureka结合了，如果单独使用zuul,那么就必须写自己机器的IP了，
+      #如url:http://localhost:8080/  这样的不好就是写死IP了，万一这IP挂了，这高可用性，服务注册那套东西就用不起来了
+      serviceId: zuul-client
+# 路由配置方式一
+#zuul:
+#  routes:
+#所有请求management-equip的请求，都会被拦截，并且转发到equip上
+#    management-equip: /equip/**
+
+# 路由配置方式二
+#zuul:
+#  routes:
+#    # 其中equip是路由名称，可以随便定义，但是path和service-id需要一一对应
+#    equip:
+#      path: /equip/**
+#      # management-equip为注册到Eureka上的服务名
+#      service-id: management-equip
+eureka:
+  instance:
+    hostname: localhost
+    # 表示eureka client间隔多久去拉取服务注册信息，默认为30秒，如果要迅速获取服务注册状态，可以缩小该值
+    lease-renewal-interval-in-seconds: 5
+    # 表示eureka server至上一次收到client的心跳之后，等待下一次心跳的超时时间，在这个时间内若没收到下一次心跳，则将移除该instance。
+    # 默认为90秒
+    # 如果该值太大，则很可能将流量转发过去的时候，该instance已经不存活了。
+    # 如果该值设置太小了，则instance则很可能因为临时的网络抖动而被摘除掉。
+    # 该值至少应该大于 leaseRenewalIntervalInSeconds
+    lease-expiration-duration-in-seconds: 10
+  #客户端
+  client:
+    #注册中心地址
+    service-url:
+      defaultZone: http://127.0.0.1:10000/eureka/

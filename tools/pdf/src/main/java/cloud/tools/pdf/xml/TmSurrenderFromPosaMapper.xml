@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmSurrenderFromPosaMapper">
+    <insert id="runSurrenderFromPosa" parameterType="java.lang.String" useGeneratedKeys="false">
+        merge into surrender_ipor t
+                using (SELECT  Basic.CurrentDate as sumbitdate ,
+                a.contno,
+                decode(a.firstpermissiontype,
+                '1-首次来电',
+                '1',
+                a.firstpermissiontype) as  firstpermissiontype,
+                a.confirmdate
+                FROM smartFromPosa a
+                where a.modifydate = to_date(#{mdate,jdbcType=VARCHAR},'YYYY-MM-DD')) b
+                on (b.contno = t.contno)
+                when matched then
+                update set
+                t.csvdate =  b.sumbitdate,
+                t.reasoncode = b.firstpermissiontype,
+                t.csrsubdate = b.confirmdate,
+                t.modifydate = basic.CurrentDate,
+                t.modifytime = basic.CurrentTime
+                when not matched then
+                insert(
+                t.csvdate,
+                t.contno,
+                t.reasoncode,
+                t.csrsubdate,
+                t.makedate,
+                t.maketime,
+                t.modifydate,
+                t.modifytime
+                )values(
+                b.sumbitdate,
+                b.contno,
+                b.firstpermissiontype,
+                b.confirmdate,
+                basic.CurrentDate,
+                basic.CurrentTime,
+                basic.CurrentDate,
+                basic.CurrentTime)
+    </insert>
+
+    <select id="count" parameterType="java.lang.String" resultType="java.lang.Integer">
+                SELECT  COUNT(1)
+                        FROM smartFromPosa a
+                        where a.modifydate = to_date(#{mdate,jdbcType=VARCHAR},'YYYY-MM-DD')
+        </select>
+
+    <select id="checkDates" parameterType="java.lang.String" resultType="java.lang.String">
+                SELECT  a.contno
+                        FROM SMARTFROMPOSA a
+                        where
+                        not exists (
+                        select 1 from surrender_ipor b
+                        where a.contno = b.contno)
+                        and a.modifydate <![CDATA[>=]]> add_months(to_date(#{mdate,jdbcType=VARCHAR},'YYYY-MM-DD'),-1)
+        </select>
+
+</mapper>

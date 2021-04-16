@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmPenaltyMapper">
+
+    <select id="countExcelList" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        (
+        SELECT a.managecom,
+        a.agentnum,
+        a.name,
+        a.penaltytype,
+        count(a.penaltytype) as penaltytypetimes
+        FROM tm_penalty a
+        where a.penaltytype = '书面警告'
+        and a.penaltytime <![CDATA[ > ]]> add_months(to_date(#{mdate}, 'yyyy-MM-dd'), -12)
+        and a.penaltytime <![CDATA[ < ]]> to_date(#{mdate}, 'yyyy-MM-dd')
+        and not exists (
+        SELECT 1
+        FROM tm_penalty b
+        where b.penaltytype = '解聘'
+        and a.agentnum = b.agentnum
+        )
+        group by a.agentnum, a.managecom, a.name, a.penaltytype
+        having count(a.penaltytype) <![CDATA[ >= ]]> 2
+
+        union all
+
+        SELECT a.managecom,
+        a.agentnum,
+        a.name,
+        a.penaltytype,
+        count(a.penaltytype) as penaltytypetimes
+        FROM tm_penalty a
+        where a.penaltytype = '解聘'
+        group by a.agentnum, a.managecom, a.name, a.penaltytype
+        having count(a.penaltytype) <![CDATA[ >= ]]> 1
+        ) t, agentinfo_hris ah, laagent la
+        where (t.agentnum = ah.agentnum and ah.agentstate like '%在职%')
+        or (la.agentnum = t.agentnum and la.agentstate = '01')
+        group by t.managecom,
+        t.agentnum,
+        t.name,
+        t.penaltytype,
+        t.penaltytypetimes
+    </select>
+
+    <select id="selectExcelList" resultType="java.util.Map">
+        SELECT
+        t.managecom,
+        t.agentnum,
+        t.name,
+        (
+        case
+        when t.penaltytype = '解聘' then '是'
+        else '否'
+        end
+        ) as ispenalty,
+        (
+        case
+        when t.penaltytype = '书面警告' then t.penaltytypetimes
+        else (
+        select count(1)
+        from tm_penalty c
+        where c.agentnum = t.agentnum
+        and c.penaltytype = '书面警告'
+        and c.penaltytime <![CDATA[>]]> add_months(to_date(#{mdate}, 'yyyy-MM-dd'), -12)
+        and c.penaltytime <![CDATA[<]]> to_date(#{mdate}, 'yyyy-MM-dd'))
+        end
+        ) as penaltytime
+        FROM
+        (
+        SELECT a.managecom,
+        a.agentnum,
+        a.name,
+        a.penaltytype,
+        count(a.penaltytype) as penaltytypetimes
+        FROM tm_penalty a
+        where a.penaltytype = '书面警告'
+        and a.penaltytime <![CDATA[ > ]]> add_months(to_date(#{mdate}, 'yyyy-MM-dd'), -12)
+        and a.penaltytime <![CDATA[ < ]]> to_date(#{mdate}, 'yyyy-MM-dd')
+        and not exists (
+        SELECT 1
+        FROM tm_penalty b
+        where b.penaltytype = '解聘'
+        and a.agentnum = b.agentnum
+        )
+        group by a.agentnum, a.managecom, a.name, a.penaltytype
+        having count(a.penaltytype) <![CDATA[ >= ]]> 2
+
+        union all
+
+        SELECT a.managecom,
+        a.agentnum,
+        a.name,
+        a.penaltytype,
+        count(a.penaltytype) as penaltytypetimes
+        FROM tm_penalty a
+        where a.penaltytype = '解聘'
+        group by a.agentnum, a.managecom, a.name, a.penaltytype
+        having count(a.penaltytype) <![CDATA[ >= ]]> 1
+        ) t, agentinfo_hris ah, laagent la
+        where (t.agentnum = ah.agentnum and ah.agentstate like '%在职%')
+        or (la.agentnum = t.agentnum and la.agentstate = '01')
+        group by t.managecom,
+        t.agentnum,
+        t.name,
+        t.penaltytype,
+        t.penaltytypetimes
+    </select>
+
+</mapper>

@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmWageLogMapper">
+    <resultMap id="BaseResultMap" type="com.cignacmb.smart.job.common.tm.entity.TmWageLog">
+        <id column="WAGENO" jdbcType="VARCHAR" property="wageno"/>
+        <id column="MANAGECOM" jdbcType="VARCHAR" property="managecom"/>
+        <id column="BRANCHTYPE" jdbcType="VARCHAR" property="branchtype"/>
+        <result column="WAGEYEAR" jdbcType="VARCHAR" property="wageyear"/>
+        <result column="WAGEMONTH" jdbcType="VARCHAR" property="wagemonth"/>
+        <result column="STARTDATE" jdbcType="DATE" property="startdate"/>
+        <result column="ENDDATE" jdbcType="DATE" property="enddate"/>
+        <result column="STATE" jdbcType="VARCHAR" property="state"/>
+        <result column="OPERATOR" jdbcType="VARCHAR" property="operator"/>
+        <result column="MAKEDATE" jdbcType="DATE" property="makedate"/>
+        <result column="MAKETIME" jdbcType="VARCHAR" property="maketime"/>
+        <result column="MODIFYDATE" jdbcType="DATE" property="modifydate"/>
+        <result column="MODIFYTIME" jdbcType="VARCHAR" property="modifytime"/>
+    </resultMap>
+
+    <sql id="Base_Dynamic_Where">
+        <where>
+            <if test="wageno != null and wageno != ''">
+                AND WAGENO = #{wageno,jdbcType=VARCHAR}
+            </if>
+            <if test="managecom != null and managecom != ''">
+                AND MANAGECOM = #{managecom,jdbcType=VARCHAR}
+            </if>
+            <if test="branchtype != null and branchtype != ''">
+                AND BRANCHTYPE = #{branchtype,jdbcType=VARCHAR}
+            </if>
+            <if test="wageyear != null and wageyear != ''">
+                AND WAGEYEAR = #{wageyear,jdbcType=VARCHAR}
+            </if>
+            <if test="wagemonth != null and wagemonth != ''">
+                AND WAGEMONTH = #{wagemonth,jdbcType=VARCHAR}
+            </if>
+            <if test="startdate != null">
+                AND STARTDATE = #{startdate,jdbcType=DATE}
+            </if>
+            <if test="enddate != null">
+                AND ENDDATE = #{enddate,jdbcType=DATE}
+            </if>
+            <if test="state != null and state != ''">
+                AND STATE = #{state,jdbcType=VARCHAR}
+            </if>
+            <if test="operator != null and operator != ''">
+                AND OPERATOR = #{operator,jdbcType=VARCHAR}
+            </if>
+            <if test="makedate != null">
+                AND MAKEDATE = #{makedate,jdbcType=DATE}
+            </if>
+            <if test="maketime != null and maketime != ''">
+                AND MAKETIME = #{maketime,jdbcType=VARCHAR}
+            </if>
+            <if test="modifydate != null">
+                AND MODIFYDATE = #{modifydate,jdbcType=DATE}
+            </if>
+            <if test="modifytime != null and modifytime != ''">
+                AND MODIFYTIME = #{modifytime,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </sql>
+    <sql id="Base_Dynamic_Column">
+        <if test="wageno != null and wageno != ''">
+            WAGENO,
+        </if>
+        <if test="managecom != null and managecom != ''">
+            MANAGECOM,
+        </if>
+        <if test="branchtype != null and branchtype != ''">
+            BRANCHTYPE,
+        </if>
+        <if test="wageyear != null and wageyear != ''">
+            WAGEYEAR,
+        </if>
+        <if test="wagemonth != null and wagemonth != ''">
+            WAGEMONTH,
+        </if>
+        <if test="startdate != null">
+            STARTDATE,
+        </if>
+        <if test="enddate != null">
+            ENDDATE,
+        </if>
+        <if test="state != null and state != ''">
+            STATE,
+        </if>
+        <if test="operator != null and operator != ''">
+            OPERATOR,
+        </if>
+        <if test="makedate != null">
+            MAKEDATE,
+        </if>
+        <if test="maketime != null and maketime != ''">
+            MAKETIME,
+        </if>
+        <if test="modifydate != null">
+            MODIFYDATE,
+        </if>
+        <if test="modifytime != null and modifytime != ''">
+            MODIFYTIME,
+        </if>
+    </sql>
+    <sql id="Base_Dynamic_Column_Value">
+        <if test="wageno != null and wageno != ''">
+            #{wageno,jdbcType=VARCHAR},
+        </if>
+        <if test="managecom != null and managecom != ''">
+            #{managecom,jdbcType=VARCHAR},
+        </if>
+        <if test="branchtype != null and branchtype != ''">
+            #{branchtype,jdbcType=VARCHAR},
+        </if>
+        <if test="wageyear != null and wageyear != ''">
+            #{wageyear,jdbcType=VARCHAR},
+        </if>
+        <if test="wagemonth != null and wagemonth != ''">
+            #{wagemonth,jdbcType=VARCHAR},
+        </if>
+        <if test="startdate != null">
+            #{startdate,jdbcType=DATE},
+        </if>
+        <if test="enddate != null">
+            #{enddate,jdbcType=DATE},
+        </if>
+        <if test="state != null and state != ''">
+            #{state,jdbcType=VARCHAR},
+        </if>
+        <if test="operator != null and operator != ''">
+            #{operator,jdbcType=VARCHAR},
+        </if>
+        <if test="makedate != null">
+            #{makedate,jdbcType=DATE},
+        </if>
+        <if test="maketime != null and maketime != ''">
+            #{maketime,jdbcType=VARCHAR},
+        </if>
+        <if test="modifydate != null">
+            #{modifydate,jdbcType=DATE},
+        </if>
+        <if test="modifytime != null and modifytime != ''">
+            #{modifytime,jdbcType=VARCHAR},
+        </if>
+    </sql>
+    <sql id="Base_Dynamic_Set">
+        <set>
+            <if test="wageyear != null">
+                WAGEYEAR = #{wageyear,jdbcType=VARCHAR},
+            </if>
+            <if test="wagemonth != null">
+                WAGEMONTH = #{wagemonth,jdbcType=VARCHAR},
+            </if>
+            <if test="startdate != null">
+                STARTDATE = #{startdate,jdbcType=DATE},
+            </if>
+            <if test="enddate != null">
+                ENDDATE = #{enddate,jdbcType=DATE},
+            </if>
+            <if test="state != null">
+                STATE = #{state,jdbcType=VARCHAR},
+            </if>
+            <if test="operator != null">
+                OPERATOR = #{operator,jdbcType=VARCHAR},
+            </if>
+            <if test="makedate != null">
+                MAKEDATE = #{makedate,jdbcType=DATE},
+            </if>
+            <if test="maketime != null">
+                MAKETIME = #{maketime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifydate != null">
+                MODIFYDATE = #{modifydate,jdbcType=DATE},
+            </if>
+            <if test="modifytime != null">
+                MODIFYTIME = #{modifytime,jdbcType=VARCHAR},
+            </if>
+        </set>
+    </sql>
+    <sql id="Base_Dynamic_Page_Where">
+        <where>
+            <if test="record != null">
+                <if test="record.wageno != null and record.wageno != ''">
+                    AND WAGENO = #{record.wageno,jdbcType=VARCHAR}
+                </if>
+                <if test="record.managecom != null and record.managecom != ''">
+                    AND MANAGECOM = #{record.managecom,jdbcType=VARCHAR}
+                </if>
+                <if test="record.branchtype != null and record.branchtype != ''">
+                    AND BRANCHTYPE = #{record.branchtype,jdbcType=VARCHAR}
+                </if>
+                <if test="record.wageyear != null and record.wageyear != ''">
+                    AND WAGEYEAR = #{record.wageyear,jdbcType=VARCHAR}
+                </if>
+                <if test="record.wagemonth != null and record.wagemonth != ''">
+                    AND WAGEMONTH = #{record.wagemonth,jdbcType=VARCHAR}
+                </if>
+                <if test="record.startdate != null">
+                    AND STARTDATE = #{record.startdate,jdbcType=DATE}
+                </if>
+                <if test="record.enddate != null">
+                    AND ENDDATE = #{record.enddate,jdbcType=DATE}
+                </if>
+                <if test="record.state != null and record.state != ''">
+                    AND STATE = #{record.state,jdbcType=VARCHAR}
+                </if>
+                <if test="record.operator != null and record.operator != ''">
+                    AND OPERATOR = #{record.operator,jdbcType=VARCHAR}
+                </if>
+                <if test="record.makedate != null">
+                    AND MAKEDATE = #{record.makedate,jdbcType=DATE}
+                </if>
+                <if test="record.maketime != null and record.maketime != ''">
+                    AND MAKETIME = #{record.maketime,jdbcType=VARCHAR}
+                </if>
+                <if test="record.modifydate != null">
+                    AND MODIFYDATE = #{record.modifydate,jdbcType=DATE}
+                </if>
+                <if test="record.modifytime != null and record.modifytime != ''">
+                    AND MODIFYTIME = #{record.modifytime,jdbcType=VARCHAR}
+                </if>
+            </if>
+        </where>
+    </sql>
+    <sql id="Base_Column_List">
+        WAGENO, MANAGECOM, BRANCHTYPE, WAGEYEAR, WAGEMONTH, STARTDATE, ENDDATE, STATE, OPERATOR,
+        MAKEDATE, MAKETIME, MODIFYDATE, MODIFYTIME
+    </sql>
+
+    <insert id="insertSelective" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog">
+        insert into TMWAGELOG
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <include refid="Base_Dynamic_Column"/>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <include refid="Base_Dynamic_Column_Value"/>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog">
+        update TMWAGELOG
+        <include refid="Base_Dynamic_Set"/>
+        where WAGENO = #{wageno,jdbcType=VARCHAR}
+        and MANAGECOM = #{managecom,jdbcType=VARCHAR}
+        and BRANCHTYPE = #{branchtype,jdbcType=VARCHAR}
+    </update>
+    <select id="selectByCondition" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog"
+            resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        TMWAGELOG
+        <include refid="Base_Dynamic_Where"/>
+    </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select WAGENO, MANAGECOM, BRANCHTYPE, WAGEYEAR, WAGEMONTH, STARTDATE, ENDDATE, STATE,
+        OPERATOR, MAKEDATE, MAKETIME, MODIFYDATE, MODIFYTIME
+        from TMWAGELOG
+    </select>
+    <select id="countByPage" parameterType="com.cignacmb.smart.service.common.base.entity.PageInfo"
+            resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM
+        TMWAGELOG
+        <include refid="Base_Dynamic_Page_Where"/>
+    </select>
+    <select id="selectByPage" parameterType="com.cignacmb.smart.service.common.base.entity.PageInfo"
+            resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        TMWAGELOG
+        <include refid="Base_Dynamic_Page_Where"/>
+        ORDER BY 1
+    </select>
+    <select id="count" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM TMWAGELOG
+        <include refid="Base_Dynamic_Where"/>
+    </select>
+    <delete id="deleteByCondition" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog">
+        DELETE FROM TMWAGELOG
+        <include refid="Base_Dynamic_Where"/>
+    </delete>
+    <delete id="deleteByPrimaryKey" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog">
+        DELETE FROM TMWAGELOG
+        WHERE
+        WAGENO = #{wageno,jdbcType=VARCHAR}
+        AND MANAGECOM = #{managecom,jdbcType=VARCHAR}
+        AND BRANCHTYPE = #{branchtype,jdbcType=VARCHAR}
+    </delete>
+    <select id="selectByPrimaryKey" parameterType="com.cignacmb.smart.job.common.tm.entity.TmWageLog"
+            resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        TMWAGELOG
+        WHERE
+        WAGENO = #{wageno,jdbcType=VARCHAR}
+        AND MANAGECOM = #{managecom,jdbcType=VARCHAR}
+        AND BRANCHTYPE = #{branchtype,jdbcType=VARCHAR}
+    </select>
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="false">
+        INSERT ALL
+        <foreach collection="list" index="index" item="item">
+            INTO TMWAGELOG(
+            <trim suffixOverrides=",">
+                <if test="item.wageno != null and item.wageno != ''">
+                    WAGENO,
+                </if>
+                <if test="item.managecom != null and item.managecom != ''">
+                    MANAGECOM,
+                </if>
+                <if test="item.branchtype != null and item.branchtype != ''">
+                    BRANCHTYPE,
+                </if>
+                <if test="item.wageyear != null and item.wageyear != ''">
+                    WAGEYEAR,
+                </if>
+                <if test="item.wagemonth != null and item.wagemonth != ''">
+                    WAGEMONTH,
+                </if>
+                <if test="item.startdate != null">
+                    STARTDATE,
+                </if>
+                <if test="item.enddate != null">
+                    ENDDATE,
+                </if>
+                <if test="item.state != null and item.state != ''">
+                    STATE,
+                </if>
+                <if test="item.operator != null and item.operator != ''">
+                    OPERATOR,
+                </if>
+                <if test="item.makedate != null">
+                    MAKEDATE,
+                </if>
+                <if test="item.maketime != null and item.maketime != ''">
+                    MAKETIME,
+                </if>
+                <if test="item.modifydate != null">
+                    MODIFYDATE,
+                </if>
+                <if test="item.modifytime != null and item.modifytime != ''">
+                    MODIFYTIME,
+                </if>
+            </trim>
+            ) VALUES (
+            <trim suffixOverrides=",">
+                <if test="item.wageno != null and item.wageno != ''">
+                    #{item.wageno,jdbcType=VARCHAR},
+                </if>
+                <if test="item.managecom != null and item.managecom != ''">
+                    #{item.managecom,jdbcType=VARCHAR},
+                </if>
+                <if test="item.branchtype != null and item.branchtype != ''">
+                    #{item.branchtype,jdbcType=VARCHAR},
+                </if>
+                <if test="item.wageyear != null and item.wageyear != ''">
+                    #{item.wageyear,jdbcType=VARCHAR},
+                </if>
+                <if test="item.wagemonth != null and item.wagemonth != ''">
+                    #{item.wagemonth,jdbcType=VARCHAR},
+                </if>
+                <if test="item.startdate != null">
+                    #{item.startdate,jdbcType=DATE},
+                </if>
+                <if test="item.enddate != null">
+                    #{item.enddate,jdbcType=DATE},
+                </if>
+                <if test="item.state != null and item.state != ''">
+                    #{item.state,jdbcType=VARCHAR},
+                </if>
+                <if test="item.operator != null and item.operator != ''">
+                    #{item.operator,jdbcType=VARCHAR},
+                </if>
+                <if test="item.makedate != null">
+                    #{item.makedate,jdbcType=DATE},
+                </if>
+                <if test="item.maketime != null and item.maketime != ''">
+                    #{item.maketime,jdbcType=VARCHAR},
+                </if>
+                <if test="item.modifydate != null">
+                    #{item.modifydate,jdbcType=DATE},
+                </if>
+                <if test="item.modifytime != null and item.modifytime != ''">
+                    #{item.modifytime,jdbcType=VARCHAR},
+                </if>
+            </trim>
+            )
+
+        </foreach>
+        SELECT 1 FROM DUAL
+    </insert>
+
+    <select id="checkWageLogState" resultType="java.lang.Integer">
+        select count(1)
+        from tmwagelog a
+        where a.wageno = to_char(date'${calDate}', 'yyyymm')
+        and a.managecom = #{manageCom}
+        and a.state = '11'
+        and a.enddate >= date'${calDate}'
+    </select>
+
+    <update id="updateState">
+        update TMWageLog a
+        set a.state = #{state},
+        a.modifydate = basic.CurrentDate,
+        a.modifytime = basic.CurrentTime
+        where a.wageno = #{wageNo}
+        and a.managecom = #{manageCom}
+    </update>
+
+</mapper>

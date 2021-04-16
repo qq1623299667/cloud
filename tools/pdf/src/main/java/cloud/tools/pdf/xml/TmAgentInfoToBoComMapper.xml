@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentInfoToBoComMapper">
+
+    <select id="getMaxTime" parameterType="java.util.Map"
+            resultType="java.util.Map">
+        select to_char(a.endDate,'yyyy-mm-dd') as "maxDate",a.endTime as "maxTime" from
+        tmagenttobocomlog a
+        WHERE a.batchsn = (SELECT max(b.batchsn) FROM tmagenttobocomlog b)
+    </select>
+
+    <insert id="insertLog">
+        insert into TMAGENTTOBOCOMLOG (BATCHSN, endDate,
+        endTime, FLAG, MAKEDATE,
+        MAKETIME, MODIFYDATE, MODIFYTIME)
+        values(
+        #{batch,jdbcType=VARCHAR},
+        to_date(#{endDate,jdbcType=VARCHAR},'yyyy-mm-dd'),
+        #{endTime,jdbcType=VARCHAR},
+        '00',
+        basic.CurrentDate,basic.CurrentTime,
+        basic.CurrentDate,basic.CurrentTime
+        )
+    </insert>
+
+    <insert id="insertAgentInfo" parameterType="java.util.Map">
+        insert into tmagentinfotobocom (INDEXSN, BATCHSN, NAME, SEX, BIRTHDAY,
+        AGE, MARRIAGE, COUNTRY, NATIONALITY, RGTADDRESS, HOUSEHOLDTYPE,
+        MANAGECOM,
+        DEGREE, HIGHESTDEGREE, MOBILE, IDTYPE, IDNO, POLITYVISAGE, IDCARDADDRESS,
+        HOMEADDRESS, COMPANYPHONE, FIRMMAIL, EMAIL, EMERGENCYCONTACTNAME,
+        EMERGENCYCONTACTPHONE,
+        MANAGETMS, MANAGECCM, TMMGR, BANKNETWORKNAME, BANKNAME, BANKCOMPLAINTPHONE,
+        OCCUPATIONREGISTERNO, OCCUPATIONREGISTERDATE, AGENTNUM, AGENTSN, CITY,
+        GRADUATESCHOOL,
+        SPECIALITY, ADMISSIONDATE, GRADUATIONDATE, FIRSTJOBDATE, JOINTHEPARTYDATE,
+        LEAVEPARTY,
+        LEAVEPARTYDATE, ENGLISHLEVEL, POSTTITLE, SKILLLEVEL, OLDCOM, LASTJOBSTARTDATE,
+        LASTJOBendDate, APPLICATION3, SIGNLABORCONTRACTDATE, PROBATIONendDate,
+        CONTRACTendDate, OCCUPATIONREGISTERSTATE, QUAFNO, QUAFSTARTDATE,
+        QUAFendDate,
+        SALNO, SALSTARTDATE, SALendDate, PRACTICEOUTDATE, MAKEDATE, MAKETIME,banksn)
+        with t as (
+        select
+        to_char(a.surname || a.name) as name,
+        (select wd10.codename
+        from ldcode wd10
+        where wd10.codetype = 'sex'
+        and wd10.code = a.sex) as sex,
+        a.birthday as birthday,
+        to_char(decode(a.birthday,
+        null,
+        null,
+        (select floor(MONTHS_BETWEEN(sysdate, a.birthday) / 12)
+        from dual))) as age,
+        (select wd20.codename
+        from ldcode wd20
+        where wd20.codetype = 'tm_marriage'
+        and wd20.code = a.marriage) as marriage,
+        b.Country as Country,
+        (select wd16.codename
+        from ldcode wd16
+        where wd16.codetype = 'nationality'
+        and wd16.code = a.nationality) as nationality,
+        a.rgtaddress as rgtaddress,
+        (select wd14.codename
+        from ldcode wd14
+        where wd14.codetype = 'tm_householdtype'
+        and wd14.code = b.Householdtype) as Householdtype,
+        c.shortname as managecom,
+        (select wd11.codename
+        from ldcode wd11
+        where wd11.codetype = 'degree'
+        and wd11.code = a.degree) as degree,
+        b.HighestDegree as HighestDegree,
+        a.mobile as mobile,
+        (select wd12.codename
+        from ldcode wd12
+        where wd12.codetype = 'f_tmidtype'
+        and wd12.code = a.idtype) as idtype,
+        a.idno as idno,
+        (select wd19.codename
+        from ldcode wd19
+        where wd19.codetype = 'polityvisage'
+        and wd19.code = a.polityvisage) as polityvisage,
+        b.IDCardAddress as IDCardAddress,
+        a.homeaddress as homeaddress,
+        b.companyPhone as companyPhone,
+        b.firmMail as firmMail,
+        a.email as email,
+        b.emergencyContactName as emergencyContactName,
+        b.emergencyContactPhone as emergencyContactPhone,
+        b.b1 as managetms,
+        b.b2 as manageccm,
+        b.tmmgr as tmmgr,
+        null as bankname,
+        null as bank,
+        null as bankcomplaintphone,
+        null as OccupationregisterNo,
+        null as OccupationregisterDate,
+        a.agentnum as agentnum,
+        b.agentsn as agentsn,
+        c.reportscity as city,
+        a.graduateschool as graduateschool,
+        a.speciality as speciality,
+        b.AdmissionDate as AdmissionDate,
+        b.graduationDate as graduationDate,
+        b.firstJobDate as firstJobDate,
+        b.joinThePartyDate as joinThePartyDate,
+        b.leaveParty as leaveParty,
+        b.leavePartyDate as leavePartyDate,
+        b.EnglishLevel as EnglishLevel,
+        (select wd21.codename
+        from ldcode wd21
+        where wd21.codetype = 'posttitle'
+        and wd21.code = a.posttitle) as posttitle,
+        b.skillLevel as skillLevel,
+        a.oldcom as oldcom,
+        b.lastJobStartDate as lastJobStartDate,
+        b.lastJobendDate as lastJobendDate,
+        b.application3 as application3,
+        b.SignLaborContractDate as SignLaborContractDate,
+        b.ProbationendDate as ProbationendDate,
+        b.contractendDate as contractendDate,
+        null as Occupationregisterstate,
+        a.quafno as quafno,
+        a.quafstartdate as quafstartdate,
+        a.quafendDate as quafendDate,
+        a.salno as salno,
+        a.salstartdate as salstartdate,
+        a.salendDate as salendDate,
+        b.probationendDate as prabationendDate,
+        b.banksn
+        from laagent a, laagentinfo b, tmmanagecom c, agentunicode f, laagentgrade g
+        where a.agentcode = b.agentcode
+        and a.branchtype = '1'
+        and a.agentcode = f.agentcode(+)
+        and a.managecom = c.managecom
+        and a.managecom in ('0000000025', '0000000008')
+        and (a.agentstate = '01' or a.employdate >= date '2019-07-01')
+        and b.postenname = g.gradecode
+        AND b.banksn IS NOT NULL
+        and g.noti in ('TMS','TMR')
+        and (b.postsign not like '%虚拟%' or b.postsign is null)
+        and (
+        to_char(a.modifydate,'yyyy-mm-dd') || a.modifytime >= #{maxDate,jdbcType=VARCHAR} || #{maxTime,jdbcType=VARCHAR}
+        or
+        to_char(b.modifydate,'yyyy-mm-dd') || b.modifytime >= #{maxDate,jdbcType=VARCHAR} || #{maxTime,jdbcType=VARCHAR}
+        )
+
+        minus
+
+        select x.NAME,
+        x.SEX,
+        x.BIRTHDAY,
+        to_char(x.AGE),
+        x.MARRIAGE,
+        x.COUNTRY,
+        x.NATIONALITY,
+        x.RGTADDRESS,
+        x.HOUSEHOLDTYPE,
+        x.MANAGECOM,
+        x.DEGREE,
+        x.HIGHESTDEGREE,
+        x.MOBILE,
+        x.IDTYPE,
+        x.IDNO,
+        x.POLITYVISAGE,
+        x.IDCARDADDRESS,
+        x.HOMEADDRESS,
+        x.COMPANYPHONE,
+        x.FIRMMAIL,
+        x.EMAIL,
+        x.EMERGENCYCONTACTNAME,
+        x.EMERGENCYCONTACTPHONE,
+        x.MANAGETMS,
+        x.MANAGECCM,
+        x.TMMGR,
+        x.BANKNETWORKNAME,
+        x.BANKNAME,
+        x.BANKCOMPLAINTPHONE,
+        x.OCCUPATIONREGISTERNO,
+        x.OCCUPATIONREGISTERDATE,
+        x.AGENTNUM,
+        x.AGENTSN,
+        x.CITY,
+        x.GRADUATESCHOOL,
+        x.SPECIALITY,
+        x.ADMISSIONDATE,
+        x.GRADUATIONDATE,
+        x.FIRSTJOBDATE,
+        x.JOINTHEPARTYDATE,
+        x.LEAVEPARTY,
+        x.LEAVEPARTYDATE,
+        x.ENGLISHLEVEL,
+        x.POSTTITLE,
+        x.SKILLLEVEL,
+        x.OLDCOM,
+        x.LASTJOBSTARTDATE,
+        x.LASTJOBendDate,
+        x.APPLICATION3,
+        x.SIGNLABORCONTRACTDATE,
+        x.PROBATIONendDate,
+        x.CONTRACTendDate,
+        x.OCCUPATIONREGISTERSTATE,
+        x.QUAFNO,
+        x.QUAFSTARTDATE,
+        x.QUAFendDate,
+        x.SALNO,
+        x.SALSTARTDATE,
+        x.SALendDate,
+        x.PRACTICEOUTDATE,
+        x.banksn
+        from tmagentinfotobocom x
+        WHERE (x.batchsn, NVL(x.NAME, '#'), NVL(x.SEX, '#'),
+        NVL(x.BIRTHDAY, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.AGE, -1), NVL(x.MARRIAGE, '#'), NVL(x.COUNTRY, '#'),
+        NVL(x.NATIONALITY, '#'), NVL(x.RGTADDRESS, '#'),
+        NVL(x.HOUSEHOLDTYPE, '#'), NVL(x.MANAGECOM, '#'),
+        NVL(x.DEGREE, '#'), NVL(x.HIGHESTDEGREE, '#'),
+        NVL(x.MOBILE, '#'), NVL(x.IDTYPE, '#'), NVL(x.IDNO, '#'),
+        NVL(x.POLITYVISAGE, '#'), NVL(x.IDCARDADDRESS, '#'),
+        NVL(x.HOMEADDRESS, '#'), NVL(x.COMPANYPHONE, '#'),
+        NVL(x.FIRMMAIL, '#'), NVL(x.EMAIL, '#'),
+        NVL(x.EMERGENCYCONTACTNAME, '#'),
+        NVL(x.EMERGENCYCONTACTPHONE, '#'), NVL(x.MANAGETMS, '#'),
+        NVL(x.MANAGECCM, '#'), NVL(x.TMMGR, '#'),
+        NVL(x.BANKNETWORKNAME, '#'), NVL(x.BANKNAME, '#'),
+        NVL(x.BANKCOMPLAINTPHONE, '#'),
+        NVL(x.OCCUPATIONREGISTERNO, '#'),
+        NVL(x.OCCUPATIONREGISTERDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.AGENTNUM, '#'), NVL(x.AGENTSN, '#'), NVL(x.CITY, '#'),
+        NVL(x.GRADUATESCHOOL, '#'), NVL(x.SPECIALITY, '#'),
+        NVL(x.ADMISSIONDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.GRADUATIONDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.FIRSTJOBDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.JOINTHEPARTYDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.LEAVEPARTY, '#'),
+        NVL(x.LEAVEPARTYDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.ENGLISHLEVEL, '#'), NVL(x.POSTTITLE, '#'),
+        NVL(x.SKILLLEVEL, '#'), NVL(x.OLDCOM, '#'),
+        NVL(x.LASTJOBSTARTDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.LASTJOBendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.APPLICATION3, '#'),
+        NVL(x.SIGNLABORCONTRACTDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.PROBATIONendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.CONTRACTendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.OCCUPATIONREGISTERSTATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')), NVL(x.QUAFNO, '#'),
+        NVL(x.QUAFSTARTDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.QUAFendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.SALNO, '#'),
+        NVL(x.SALSTARTDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.SALendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.PRACTICEOUTDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(x.banksn, '#')) in
+        (select max(batchsn),
+        NVL(NAME, '#'),
+        NVL(SEX, '#'),
+        NVL(BIRTHDAY, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(AGE, -1),
+        NVL(MARRIAGE, '#'),
+        NVL(COUNTRY, '#'),
+        NVL(NATIONALITY, '#'),
+        NVL(RGTADDRESS, '#'),
+        NVL(HOUSEHOLDTYPE, '#'),
+        NVL(MANAGECOM, '#'),
+        NVL(DEGREE, '#'),
+        NVL(HIGHESTDEGREE, '#'),
+        NVL(MOBILE, '#'),
+        NVL(IDTYPE, '#'),
+        NVL(IDNO, '#'),
+        NVL(POLITYVISAGE, '#'),
+        NVL(IDCARDADDRESS, '#'),
+        NVL(HOMEADDRESS, '#'),
+        NVL(COMPANYPHONE, '#'),
+        NVL(FIRMMAIL, '#'),
+        NVL(EMAIL, '#'),
+        NVL(EMERGENCYCONTACTNAME, '#'),
+        NVL(EMERGENCYCONTACTPHONE, '#'),
+        NVL(MANAGETMS, '#'),
+        NVL(MANAGECCM, '#'),
+        NVL(TMMGR, '#'),
+        NVL(BANKNETWORKNAME, '#'),
+        NVL(BANKNAME, '#'),
+        NVL(BANKCOMPLAINTPHONE, '#'),
+        NVL(OCCUPATIONREGISTERNO, '#'),
+        NVL(OCCUPATIONREGISTERDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(AGENTNUM, '#'),
+        NVL(AGENTSN, '#'),
+        NVL(CITY, '#'),
+        NVL(GRADUATESCHOOL, '#'),
+        NVL(SPECIALITY, '#'),
+        NVL(ADMISSIONDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(GRADUATIONDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(FIRSTJOBDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(JOINTHEPARTYDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(LEAVEPARTY, '#'),
+        NVL(LEAVEPARTYDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(ENGLISHLEVEL, '#'),
+        NVL(POSTTITLE, '#'),
+        NVL(SKILLLEVEL, '#'),
+        NVL(OLDCOM, '#'),
+        NVL(LASTJOBSTARTDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(LASTJOBendDate,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(APPLICATION3, '#'),
+        NVL(SIGNLABORCONTRACTDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(PROBATIONendDate,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(CONTRACTendDate,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(OCCUPATIONREGISTERSTATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(QUAFNO, '#'),
+        NVL(QUAFSTARTDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(QUAFendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(SALNO, '#'),
+        NVL(SALSTARTDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(SALendDate, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(PRACTICEOUTDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(banksn, '#')
+        from tmagentinfotobocom
+        group by NAME,
+        SEX,
+        BIRTHDAY,
+        AGE,
+        MARRIAGE,
+        COUNTRY,
+        NATIONALITY,
+        RGTADDRESS,
+        HOUSEHOLDTYPE,
+        MANAGECOM,
+        DEGREE,
+        HIGHESTDEGREE,
+        MOBILE,
+        IDTYPE,
+        IDNO,
+        POLITYVISAGE,
+        IDCARDADDRESS,
+        HOMEADDRESS,
+        COMPANYPHONE,
+        FIRMMAIL,
+        EMAIL,
+        EMERGENCYCONTACTNAME,
+        EMERGENCYCONTACTPHONE,
+        MANAGETMS,
+        MANAGECCM,
+        TMMGR,
+        BANKNETWORKNAME,
+        BANKNAME,
+        BANKCOMPLAINTPHONE,
+        OCCUPATIONREGISTERNO,
+        OCCUPATIONREGISTERDATE,
+        AGENTNUM,
+        AGENTSN,
+        CITY,
+        GRADUATESCHOOL,
+        SPECIALITY,
+        ADMISSIONDATE,
+        GRADUATIONDATE,
+        FIRSTJOBDATE,
+        JOINTHEPARTYDATE,
+        LEAVEPARTY,
+        LEAVEPARTYDATE,
+        ENGLISHLEVEL,
+        POSTTITLE,
+        SKILLLEVEL,
+        OLDCOM,
+        LASTJOBSTARTDATE,
+        LASTJOBendDate,
+        APPLICATION3,
+        SIGNLABORCONTRACTDATE,
+        PROBATIONendDate,
+        CONTRACTendDate,
+        OCCUPATIONREGISTERSTATE,
+        QUAFNO,
+        QUAFSTARTDATE,
+        QUAFendDate,
+        SALNO,
+        SALSTARTDATE,
+        SALendDate,
+        PRACTICEOUTDATE,
+        banksn)
+
+        )
+        select
+        to_char(createmaxno('agentbocomSN', 'SN'),'FM0000000000') AS INDEXSN,
+        #{batch,jdbcType=VARCHAR},
+        t.NAME
+        ,t.SEX
+        ,t.BIRTHDAY
+        ,t.AGE
+        ,t.MARRIAGE
+        ,t.COUNTRY
+        ,t.NATIONALITY
+        ,t.RGTADDRESS
+        ,t.HOUSEHOLDTYPE
+        ,t.MANAGECOM
+        ,t.DEGREE
+        ,t.HIGHESTDEGREE
+        ,t.MOBILE
+        ,t.IDTYPE
+        ,t.IDNO
+        ,t.POLITYVISAGE
+        ,t.IDCARDADDRESS
+        ,t.HOMEADDRESS
+        ,t.COMPANYPHONE
+        ,t.FIRMMAIL
+        ,t.EMAIL
+        ,t.EMERGENCYCONTACTNAME
+        ,t.EMERGENCYCONTACTPHONE
+        ,t.MANAGETMS
+        ,t.MANAGECCM
+        ,t.TMMGR
+        ,t.BANKNAME
+        ,t.BANK
+        ,t.BANKCOMPLAINTPHONE
+        ,t.OCCUPATIONREGISTERNO
+        ,t.OCCUPATIONREGISTERDATE
+        ,t.AGENTNUM
+        ,t.AGENTSN
+        ,t.CITY
+        ,t.GRADUATESCHOOL
+        ,t.SPECIALITY
+        ,t.ADMISSIONDATE
+        ,t.GRADUATIONDATE
+        ,t.FIRSTJOBDATE
+        ,t.JOINTHEPARTYDATE
+        ,t.LEAVEPARTY
+        ,t.LEAVEPARTYDATE
+        ,t.ENGLISHLEVEL
+        ,t.POSTTITLE
+        ,t.SKILLLEVEL
+        ,t.OLDCOM
+        ,t.LASTJOBSTARTDATE
+        ,t.LASTJOBendDate
+        ,t.APPLICATION3
+        ,t.SIGNLABORCONTRACTDATE
+        ,t.PROBATIONendDate
+        ,t.CONTRACTendDate
+        ,t.OCCUPATIONREGISTERSTATE
+        ,t.QUAFNO
+        ,t.QUAFSTARTDATE
+        ,t.QUAFendDate
+        ,t.SALNO
+        ,t.SALSTARTDATE
+        ,t.SALendDate
+        ,t.PRABATIONendDate,basic.CurrentDate,basic.CurrentTime,t.banksn
+        from t
+    </insert>
+
+    <insert id="insertWage" parameterType="java.util.Map">
+        insert into tmagentwagetobocom (INDEXSN, BATCHSN, NAME, AGENTNUM, CITY,
+        MANAGECOM,
+        WAGENO, TMSNUM, CCMNUM, POSTTYPE, AGENTGRADE, AGENTSTATE, CALFLAG,
+        COMMISSIONRATE1,
+        COMMISSIONRATE2, COMMISSIONRATE3, CALMONEY1, CALMONEY2, CALMONEY3, AMEP1, AMEP2,
+        AMEP3,
+        BASICCOMMISSION1, BASICCOMMISSION2, BASICCOMMISSION3, EMPLOYDATE, TAKEUPDATE,
+        DIMISSIONDATE, MAKEDATE, MAKETIME,banksn)
+        with x as
+        (select to_char(nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), c.name))
+        as name,
+        c.agentnum as agentnum,
+        (select t.ReportsCity
+        from tmmanagecom t
+        where t.managecom = b.managecom) as city,
+        (select tm.shortname
+        from tmmanagecom tm
+        where tm.managecom = b.managecom) as managecom,
+        a.indexcalno as wageno,
+        (select la.agentnum
+        from laagent la
+        where la.agentcode = b.tmscode) as tmsnum,
+        (select la.agentnum
+        from laagent la
+        where la.agentcode = b.ccmcode) as ccmnum,
+        b.posttype as posttype,
+        b.agentgrade as
+        agentgrade,
+        (select ld.codename
+        from ldcode ld
+        where codetype = 'tmagentstate'
+        and ld.code = c.agentstate) as agentstate,
+        '' as calflag,
+        a.w1 as commissionrate1,
+        a.w2 as commissionrate2,
+        a.w3 as commissionrate3,
+        a.w121 as calmoney1,
+        a.w122 as calmoney2,
+        a.w123 as calmoney3,
+        a.w115 as amep1,
+        a.w116 as amep2,
+        a.w117 as amep3,
+        a.w77 * a.w1 as basiccommission1,
+        a.w78 * a.w2 as basiccommission2,
+        a.w79 * a.w3 as basiccommission3,
+        c.employdate as employdate,
+        c.takeupdate as takeupdate,
+        c.dimissiondate as dimissiondate,g.banksn
+        from
+        tmwage a,
+        tmwageagentc b,
+        tmsalaryagentc c,
+        agentunicode f, laagentinfo g
+        where a.agentcode = b.agentcode and a.agentcode = g.agentcode
+        and a.managecom = b.managecom and a.managecom in ('0000000025',
+        '0000000008')
+        and c.agentnum = f.agentnum(+)
+        and a.agentcode = c.agentcode
+        and a.indexcalno = c.bakmonth
+        and a.agentgrade = b.posttype
+        and a.indexcalno = b.bakmonth and b.posttype in ('TMR','TMS')
+        and to_char(a.modifydate,'yyyy-mm-dd') || a.modifytime >= #{maxDate,jdbcType=VARCHAR} ||
+        #{maxTime,jdbcType=VARCHAR}
+
+        minus
+
+        select t.NAME,
+        t.AGENTNUM,
+        t.CITY,
+        t.MANAGECOM,
+        t.WAGENO,
+        t.TMSNUM,
+        t.CCMNUM,
+        t.POSTTYPE,
+        t.AGENTGRADE,
+        t.AGENTSTATE,
+        t.CALFLAG,
+        t.COMMISSIONRATE1,
+        t.COMMISSIONRATE2,
+        t.COMMISSIONRATE3,
+        t.CALMONEY1,
+        t.CALMONEY2,
+        t.CALMONEY3,
+        t.AMEP1,
+        t.AMEP2,
+        t.AMEP3,
+        t.BASICCOMMISSION1,
+        t.BASICCOMMISSION2,
+        t.BASICCOMMISSION3,
+        t.EMPLOYDATE,
+        t.TAKEUPDATE,
+        t.DIMISSIONDATE,
+        t.banksn
+        from tmagentwagetobocom t
+        WHERE (t.batchsn, NVL(t.NAME, '#'), NVL(t.AGENTNUM, '#'),
+        NVL(t.CITY, '#'), NVL(t.MANAGECOM, '#'), NVL(t.WAGENO, '#'),
+        NVL(t.TMSNUM, '#'), NVL(t.CCMNUM, '#'), NVL(t.POSTTYPE, '#'),
+        NVL(t.AGENTGRADE, '#'), NVL(t.AGENTSTATE, '#'),
+        NVL(t.CALFLAG, '#'), NVL(t.COMMISSIONRATE1, -1),
+        NVL(t.COMMISSIONRATE2, -1), NVL(t.COMMISSIONRATE3, -1),
+        NVL(t.CALMONEY1, -1), NVL(t.CALMONEY2, -1),
+        NVL(t.CALMONEY3, -1), NVL(t.AMEP1, -1), NVL(t.AMEP2, -1),
+        NVL(t.AMEP3, -1), NVL(t.BASICCOMMISSION1, -1),
+        NVL(t.BASICCOMMISSION2, -1), NVL(t.BASICCOMMISSION3, -1),
+        NVL(t.EMPLOYDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(t.TAKEUPDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(t.DIMISSIONDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(t.banksn, '#')) in
+        (select max(batchsn),
+        NVL(NAME, '#'),
+        NVL(AGENTNUM, '#'),
+        NVL(CITY, '#'),
+        NVL(MANAGECOM, '#'),
+        NVL(WAGENO, '#'),
+        NVL(TMSNUM, '#'),
+        NVL(CCMNUM, '#'),
+        NVL(POSTTYPE, '#'),
+        NVL(AGENTGRADE, '#'),
+        NVL(AGENTSTATE, '#'),
+        NVL(CALFLAG, '#'),
+        NVL(COMMISSIONRATE1, -1),
+        NVL(COMMISSIONRATE2, -1),
+        NVL(COMMISSIONRATE3, -1),
+        NVL(CALMONEY1, -1),
+        NVL(CALMONEY2, -1),
+        NVL(CALMONEY3, -1),
+        NVL(AMEP1, -1),
+        NVL(AMEP2, -1),
+        NVL(AMEP3, -1),
+        NVL(BASICCOMMISSION1, -1),
+        NVL(BASICCOMMISSION2, -1),
+        NVL(BASICCOMMISSION3, -1),
+        NVL(EMPLOYDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(TAKEUPDATE, to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(DIMISSIONDATE,
+        to_date('9999-09-09', 'yyyy-mm-dd')),
+        NVL(banksn, '#')
+        from tmagentwagetobocom
+        group by NAME,
+        AGENTNUM,
+        CITY,
+        MANAGECOM,
+        WAGENO,
+        TMSNUM,
+        CCMNUM,
+        POSTTYPE,
+        AGENTGRADE,
+        AGENTSTATE,
+        CALFLAG,
+        COMMISSIONRATE1,
+        COMMISSIONRATE2,
+        COMMISSIONRATE3,
+        CALMONEY1,
+        CALMONEY2,
+        CALMONEY3,
+        AMEP1,
+        AMEP2,
+        AMEP3,
+        BASICCOMMISSION1,
+        BASICCOMMISSION2,
+        BASICCOMMISSION3,
+        EMPLOYDATE,
+        TAKEUPDATE,
+        DIMISSIONDATE,
+        banksn)
+
+        )
+        select
+        to_char(createmaxno('wagebocomSN', 'SN'),'FM0000000000') AS INDEXSN,
+        #{batch,jdbcType=VARCHAR},
+        x.NAME
+        ,x.AGENTNUM
+        ,x.CITY
+        ,x.MANAGECOM
+        ,x.WAGENO
+        ,x.TMSNUM
+        ,x.CCMNUM
+        ,x.POSTTYPE
+        ,x.AGENTGRADE
+        ,x.AGENTSTATE
+        ,x.CALFLAG
+        ,x.COMMISSIONRATE1
+        ,x.COMMISSIONRATE2
+        ,x.COMMISSIONRATE3
+        ,x.CALMONEY1
+        ,x.CALMONEY2
+        ,x.CALMONEY3
+        ,x.AMEP1
+        ,x.AMEP2
+        ,x.AMEP3
+        ,x.BASICCOMMISSION1
+        ,x.BASICCOMMISSION2
+        ,x.BASICCOMMISSION3
+        ,x.EMPLOYDATE
+        ,x.TAKEUPDATE
+        ,x.DIMISSIONDATE,
+        basic.CurrentDate,basic.CurrentTime,x.banksn
+        from x where x.banksn is not null
+    </insert>
+
+    <insert id="insertCharge" parameterType="java.util.Map">
+        insert into TMCONTCHARGETOBOCOM
+        with t as (
+        select '招商信诺' as comname,a.contchargesn AS chargesn,b.riskcode,b.contno,b.years,b.payyears,
+        (select ld.codename from ldcode ld where ld.codetype = 'payintv' and ld.code = b.payintv) as payintv,null as
+        tsrname,null as TSROCCUPATIONREGISTERNO,null as
+        BANKNETWORKNAME,null as APPNTNAME,
+        null as INSUREDNAME,b.Amnt as INSURANCEAMOUNT,c.prem as
+        PREM,a.contcharge,c.paycount,
+        c.payyear from tmcontcharge a , tmlcpol b ,tmcontpay c, sponsorcode d
+        where a.contno = b.contno and b.mainpolno = b.polno
+        and a.cvalidate >=date'2019-07-01'
+        and a.contpaysn = c.contpaysn AND a.sponsorcode = d.sponsorcode and
+        d.sponsor = 'BOCHQ'
+        and not exists (select 1 from TMCONTCHARGETOBOCOM x where x.chargesn = a.contchargesn)
+        and to_char(a.MAKEDATE,'yyyy-mm-dd') || a.MAKETIME >= #{maxDate,jdbcType=VARCHAR} ||
+        #{maxTime,jdbcType=VARCHAR}
+        and to_char(a.MAKEDATE,'yyyy-mm-dd') || a.MAKETIME &lt; #{endDate,jdbcType=VARCHAR} ||
+        #{endTime,jdbcType=VARCHAR}
+        )
+        select
+        to_char(createmaxno('chargebocomSN', 'SN'),'FM0000000000') AS INDEXSN,
+        #{batch,jdbcType=VARCHAR},
+        t.COMNAME,
+        t.chargesn
+        ,t.RISKCODE
+        ,t.CONTNO
+        ,t.YEARS
+        ,t.PAYYEARS
+        , t.PAYINTV as PAYINTV
+        ,t.TSRNAME
+        ,t.TSROCCUPATIONREGISTERNO
+        ,t.BANKNETWORKNAME
+        ,t.APPNTNAME
+        ,t.INSUREDNAME
+        ,t.INSURANCEAMOUNT
+        ,t.PREM
+        ,t.CONTCHARGE
+        ,t.PAYCOUNT
+        ,t.PAYYEAR,basic.CurrentDate,basic.CurrentTime from t
+    </insert>
+
+    <update id="updateLog" parameterType="java.util.Map">
+        update tmagenttobocomlog a set a.flag = #{flag,jdbcType=VARCHAR}
+        ,a.modifydate = basic.CurrentDate,
+        a.modifytime = basic.CurrentTime where a.batchsn = #{batch,jdbcType=VARCHAR}
+    </update>
+
+    <delete id="deleteLog" parameterType="java.util.Map">
+        delete from tmagenttobocomlog A WHERE a.makedate = trunc(sysdate)
+    </delete>
+
+    <delete id="deleteAgent" parameterType="java.util.Map">
+        delete from tmagentinfotobocom A WHERE a.makedate = trunc(sysdate)
+    </delete>
+
+    <delete id="deleteWage" parameterType="java.util.Map">
+        delete from tmagentwagetobocom A WHERE a.makedate = trunc(sysdate)
+    </delete>
+
+    <delete id="deleteCharge" parameterType="java.util.Map">
+        delete from TMCONTCHARGETOBOCOM A WHERE a.makedate = trunc(sysdate)
+    </delete>
+
+</mapper>

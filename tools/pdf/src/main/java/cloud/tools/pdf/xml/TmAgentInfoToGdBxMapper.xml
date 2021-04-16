@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAgentInfoToGdBxMapper">
+
+    <select id="selectBatchNum" resultType="java.lang.String">
+        select to_char(sysdate, 'yyyymmdd') || '_' || to_char(createmaxno('AGENTGDBX', 'SN'), 'fm0000000000')
+        from dual
+    </select>
+
+    <insert id="insertTmAgentInfoOfGdMid">
+        insert into TMAgentInfoOfGDMID
+        select t.* from (
+
+        select '${batchNum}' as batchnum
+        ,nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), a.surname || a.name) as 中文名
+        ,'' as 性别
+        ,a.agentstate as 状态
+        ,'身份证'
+        ,a.idno as 证件号码
+        ,null as 生日
+        ,'' as 年龄
+        ,(select t.codename
+        from ldcode t
+        where t.codetype = 'f_idnotoprovince'
+        and substr(a.idno, 0, 2) = t.code) as 户口所在省份
+        ,a.degree as 最高学历
+        ,'招商信诺人寿保险有限公司广东分公司' as 所属机构全称
+        ,'代理合同' as 合同类型
+        ,'电销渠道' as 销售渠道类型
+        ,a.salno as 执业证证件号码
+        ,a.agentnum as 公司工号
+        ,a.salstartdate as 执业证起始时间
+        ,a.salenddate as 执业证截止时间
+        ,'人身保险' as 业务范围
+        ,c.PracticeArea as 执业区域
+        ,(case
+        when g.agentnum is null then '注册'
+        when a.agentstate &lt;> g.agentstate
+        and decode(a.salno, null, ' ', a.salno) &lt;> decode(g.salno, null, ' ', g.salno) then '注册'
+        when nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), a.surname || a.name) &lt;> g.name
+        or a.idno &lt;> g.idno
+        or decode(a.degree, null, ' ', a.degree) &lt;> decode(g.degree, null, ' ', g.degree)
+        or decode(a.salstartdate, null, date'3333-01-01', a.salstartdate) &lt;>
+        decode(g.salstartdate, null, date'3333-01-01', g.salstartdate)
+        or decode(a.salenddate, null, date'3333-01-01', a.salenddate) &lt;>
+        decode(g.salenddate, null, date'3333-01-01', g.salenddate)
+        or decode(c.PracticeArea, null, ' ', c.PracticeArea) &lt;>
+        decode(g.PracticeArea, null, ' ', g.PracticeArea) then '变更'
+        when decode(a.salno, null, ' ', a.salno) &lt;> decode(g.salno, null, ' ', g.salno) then '换发'
+        end) as 注册类型
+        ,null as 注销日期
+        ,basic.CurrentDate
+        ,basic.CurrentTime
+        from laagent a, latree b, laagentinfo c, tmbranchgroup d, agentunicode f, tmmanagecom e, TMAgentInfoOfGD g
+        where a.branchtype = '1'
+        and a.agentstate = '01'
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.managecom = e.managecom
+        and a.managecom in ('0000000017', '0000000051')
+        and a.agentnum= f.agentnum(+)
+        and a.agentnum= g.agentnum(+)
+        and (c.POSTSIGN &lt;> '虚拟账号' or c.POSTSIGN is null)
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and (select t.CodeAlias from ldcode t where t.codetype = 'f_tmagentgrade' and b.agentgrade = t.code) = 'TMR'
+        and (
+        exists (
+        select 1
+        from TMAgentInfoOfGD t
+        where t.agentnum = a.agentnum
+        and (
+        nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), a.surname || a.name) &lt;> t.name
+        or a.agentstate &lt;> t.agentstate
+        or a.idno &lt;> t.idno
+        or decode(a.degree, null, ' ', a.degree) &lt;> decode(t.degree, null, ' ', t.degree)
+        or decode(a.salno, null, ' ', a.salno) &lt;> decode(t.salno, null, ' ', t.salno)
+        or decode(a.salstartdate, null, date'3333-01-01', a.salstartdate) &lt;>
+        decode(t.salstartdate, null, date'3333-01-01', t.salstartdate)
+        or decode(a.salenddate, null, date'3333-01-01', a.salenddate) &lt;>
+        decode(t.salenddate, null, date'3333-01-01', t.salenddate)
+        or decode(c.PracticeArea, null, ' ', c.PracticeArea) &lt;>
+        decode(t.PracticeArea, null, ' ', c.PracticeArea)
+        )
+        )
+        or not exists (select 1 from TMAgentInfoOfGD t where t.agentnum = a.agentnum)
+        )
+        and not exists(
+        select 1
+        from TMAgentInfoOfGD t
+        where t.agentnum = a.agentnum
+        and (
+        nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), a.surname || a.name) = t.name
+        and a.agentstate &lt;> t.agentstate
+        and a.idno = t.idno
+        and decode(a.degree, null, ' ', a.degree) = decode(t.degree, null, ' ', t.degree)
+        and decode(a.salno, null, ' ', a.salno) = decode(t.salno, null, ' ', t.salno)
+        and decode(a.salstartdate, null, date'3333-01-01', a.salstartdate) =
+        decode(t.salstartdate, null, date'3333-01-01', t.salstartdate)
+        and decode(a.salenddate, null, date'3333-01-01', a.salenddate) =
+        decode(t.salenddate, null, date'3333-01-01', t.salenddate)
+        and decode(c.PracticeArea, null, ' ', c.PracticeArea) =
+        decode(t.PracticeArea, null, ' ', c.PracticeArea)
+        )
+        )
+        and to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss') >
+        to_date((select t.code from ldcode t where t.codetype = 'tm_gdbxflag'), 'YYYY/MM/DD HH24:mi:ss')
+
+        union all
+
+        select '${batchNum}' as batchnum
+        ,nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), a.surname || a.name) as 中文名
+        ,'' as 性别
+        ,a.agentstate as 状态
+        ,'身份证'
+        ,a.idno as 证件号码
+        ,null as 生日
+        ,'' as 年龄
+        ,'' as 户口所在省份
+        ,a.degree as 最高学历
+        ,'招商信诺人寿保险有限公司广东分公司' as 所属机构全称
+        ,'代理合同' as 合同类型
+        ,'电销渠道' as 销售渠道类型
+        ,a.salno as 执业证证件号码
+        ,a.agentnum as 公司工号
+        ,a.salstartdate as 执业证起始时间
+        ,a.salenddate as 执业证截止时间
+        ,'人身保险' as 业务范围
+        ,c.PracticeArea as 执业区域
+        ,' ' as 注册类型
+        ,e.CANCELLATIONDATE as 注销日期
+        ,basic.CurrentDate
+        ,basic.CurrentTime
+        from laagent a, latree b, laagentinfo c, tmbranchgroup d, tmdimission e, agentunicode f
+        where a.branchtype = '1'
+        and (
+        a.agentstate ='03'
+        or (a.agentstate in ('02','04') and e.CANCELLATIONDATE is not null)
+        )
+        and b.branchtype = '1'
+        and a.agentcode = b.agentcode
+        and a.agentcode = c.agentcode
+        and a.managecom in ('0000000017', '0000000051')
+        and a.agentnum = f.agentnum(+)
+        and (
+        c.POSTSIGN &lt;> '虚拟账号'
+        or c.POSTSIGN is null
+        )
+        and d.branchtype = '1'
+        and a.agentgroup = d.agentgroup
+        and e.branchtype = '1'
+        and a.agentcode = e.agentcode
+        and (select t.CodeAlias from ldcode t where t.codetype = 'f_tmagentgrade' and b.agentgrade = t.code) = 'TMR'
+        and (
+        exists(
+        select 1
+        from TMAgentInfoOfGD t
+        where t.agentnum = a.agentnum
+        and (
+        nvl(unistr(REPLACE(f.surname || f.name, '\u', '\')), a.surname || a.name) &lt;> t.name
+        or a.idno &lt;> t.idno
+        or decode(a.salno, null, ' ', a.salno) &lt;> decode(t.salno, null, ' ', t.salno)
+        or decode(e.CANCELLATIONDATE, null, date'3333-01-01', e.CANCELLATIONDATE) &lt;>
+        decode(t.CANCELLATIONDATE, null, date'3333-01-01', t.CANCELLATIONDATE)
+        )
+        )
+        or not exists (select 1 from TMAgentInfoOfGD t where t.agentnum = a.agentnum)
+        )
+        and to_date(to_char(a.modifydate, 'YYYY/MM/DD') || ' ' || a.modifytime, 'YYYY/MM/DD HH24:mi:ss') >
+        to_date((select t.code from ldcode t where t.codetype = 'tm_gdbxflag'), 'YYYY/MM/DD HH24:mi:ss')
+
+        ) t
+    </insert>
+
+    <select id="countOnlineAgent" resultType="java.lang.Integer">
+        select count(1)
+        from TMAgentInfoOfGDMID tw
+        where tw.batchnum = #{batchNum}
+        and tw.agentstate = '01'
+    </select>
+
+    <select id="selectOnlineAgent" resultType="java.util.Map">
+        select
+        ROWNUM,
+        tw.NAME,
+        tw.SEX,
+        tw.IDTYPE,
+        tw.IDNO,
+        tw.BIRTHDAY,
+        tw.AGE,
+        tw.PROVINCE,
+        (
+        select codealias
+        from ldcode t
+        where t.codetype = 'degree'
+        and t.code = tw.degree
+        ) as DEGREE,
+        tw.AGENCYNAME,
+        tw.CONTRACTTYPE,
+        tw.SALECHANNELTYPE,
+        tw.SALNO,
+        tw.AGENTNUM,
+        tw.SALSTARTDATE,
+        tw.SALENDDATE,
+        tw.BUSINESSSCOPE,
+        tw.PRACTICEAREA,
+        tw.IMPORTTYPE
+        from TMAgentInfoOfGDMID tw
+        where tw.batchnum = #{batchNum}
+        and tw.agentstate = '01'
+    </select>
+
+    <select id="countNotOnlineAgent" resultType="java.lang.Integer">
+        select count(1)
+        from TMAgentInfoOfGDMID tw
+        where tw.batchnum = #{batchNum}
+        and tw.agentstate in ('02', '03', '04')
+    </select>
+
+    <select id="selectNotOnlineAgent" resultType="java.util.Map">
+        select
+        ROWNUM,
+        tw.NAME,
+        tw.IDTYPE,
+        tw.IDNO,
+        tw.SALNO,
+        tw.CANCELLATIONDATE
+        from TMAgentInfoOfGDMID tw
+        where tw.batchnum = #{batchNum}
+        and tw.agentstate in ('02', '03', '04')
+    </select>
+
+    <update id="mergeTmAgentInfoOfGd">
+        merge into TMAgentInfoOfGD a
+        USING (
+        select t.batchnum,
+        t.name,
+        t.sex,
+        t.agentstate,
+        t.idtype,
+        t.idno,
+        t.birthday,
+        t.age,
+        t.province,
+        t.degree,
+        t.agencyName,
+        t.contracttype,
+        t.SaleChannelType,
+        t.salno,
+        t.agentnum,
+        t.salstartdate,
+        t.salenddate,
+        t.BusinessScope,
+        t.PracticeArea,
+        t.importtype,
+        t.CANCELLATIONDATE
+        from TMAgentInfoOfGDMID t
+        where t.batchnum = #{batchNum}
+        ) tw
+        on (a.agentnum = tw.agentnum)
+        WHEN MATCHED THEN
+        UPDATE
+        set a.name = nvl(tw.name, a.name),
+        a.agentstate = nvl(tw.agentstate, a.agentstate),
+        a.idno = nvl(tw.idno, a.idno),
+        a.degree = nvl(tw.degree, a.degree),
+        a.salno = nvl(tw.salno, a.salno),
+        a.salstartdate = nvl(tw.salstartdate, a.salstartdate),
+        a.salenddate = nvl(tw.salenddate, a.salenddate),
+        a.practicearea = nvl(tw.practicearea, a.practicearea),
+        a.importtype = nvl(tw.importtype, a.importtype),
+        a.CANCELLATIONDATE = nvl(tw.CANCELLATIONDATE, a.CANCELLATIONDATE),
+        a.modifydate = Basic.CurrentDate,
+        a.modifytime = Basic.CurrentTime
+        WHEN NOT MATCHED THEN
+        INSERT
+        VALUES
+        (
+        tw.name,
+        tw.sex,
+        tw.agentstate,
+        tw.idtype,
+        tw.idno,
+        tw.birthday,
+        tw.age,
+        tw.province,
+        tw.degree,
+        tw.agencyName,
+        tw.contracttype,
+        tw.SaleChannelType,
+        tw.salno,
+        tw.agentnum,
+        tw.salstartdate,
+        tw.salenddate,
+        tw.BusinessScope,
+        tw.PracticeArea,
+        tw.importtype,
+        tw.CANCELLATIONDATE,
+        Basic.CurrentDate,
+        Basic.CurrentTime,
+        Basic.CurrentDate,
+        Basic.CurrentTime
+        )
+    </update>
+
+    <update id="updateTmGdBxFlag">
+        update ldcode
+        set code = #{now}
+        where codetype = 'tm_gdbxflag'
+    </update>
+
+</mapper>

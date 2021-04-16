@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmRecruitmentAgentInformationMapper">
+
+    <select id="countActiveSql" resultType="java.lang.Integer">
+        select count(1)
+        from laagent a, laagentinfo b, tmmanagecom c, latree d
+        where a.agentstate = '01'
+        and a.agentcode = b.agentcode
+        and a.managecom = c.managecom
+        and d.agentcode = a.agentcode
+        and nvl(b.postsign, '岗位标识空') &lt;> '虚拟账号'
+        and a.salno is null
+        and trunc(a.employdate) &lt; trunc(sysdate - 5)
+    </select>
+
+    <select id="selectActiveSql" resultType="java.util.Map">
+        select
+        a.agentnum as 员工编号,
+        a.surname || a.name as 中文名,
+        c.shortname as 项目,
+        (
+        select l1.codealias
+        from ldcode l1
+        where l1.codetype = 'f_tmagentgrade'
+        and d.agentgrade = l1.code
+        ) as 岗位,
+        (
+        select l2.codename
+        from ldcode l2
+        where l2.codetype = 'f_tmagentstate'
+        and l2.code = a.agentstate
+        ) as 员工状态,
+        a.salno as 执业证证件号码,
+        a.salstartdate as 执业证起始时间,
+        a.salenddate as 执业证截止时间,
+        b.practiceoutdate as 执业证注销时间,
+        b.agencyname as 所属机构全称,
+        b.salechanneltype as 销售渠道类型,
+        b.businessscope as 业务范围,
+        b.practicearea as 执业区域
+        from laagent a, laagentinfo b, tmmanagecom c, latree d
+        where a.agentstate = '01'
+        and a.agentcode = b.agentcode
+        and a.managecom = c.managecom
+        and d.agentcode = a.agentcode
+        and nvl(b.postsign, '岗位标识空') &lt;> '虚拟账号'
+        and a.salno is null
+        and trunc(a.employdate) &lt; trunc(sysdate - 5)
+    </select>
+
+    <select id="countResignedSql" resultType="java.lang.Integer">
+        select count(1)
+        from laagent a, laagentinfo b, tmmanagecom c, latree d
+        where a.agentstate = '03'
+        and a.agentcode = b.agentcode
+        and a.managecom = c.managecom
+        and d.agentcode = a.agentcode
+        and nvl(b.postsign, '岗位标识空') &lt;> '虚拟账号'
+        and b.practiceoutdate is null
+        and trunc(a.outworkdate) &lt; trunc(sysdate-5)
+    </select>
+
+    <select id="selectResignedSql" resultType="java.util.Map">
+        select
+        a.agentnum as 员工编号,
+        a.surname || a.name as 中文名,
+        c.shortname as 项目,
+        (
+        select l1.codealias
+        from ldcode l1
+        where l1.codetype = 'f_tmagentgrade'
+        and d.agentgrade = l1.code
+        ) as 岗位,
+        (
+        select l2.codename
+        from ldcode l2
+        where l2.codetype = 'f_tmagentstate'
+        and l2.code = a.agentstate
+        ) as 员工状态,
+        a.salno as 执业证证件号码,
+        a.salstartdate as 执业证起始时间,
+        a.salenddate as 执业证截止时间,
+        b.practiceoutdate as 执业证注销时间,
+        b.agencyname as 所属机构全称,
+        b.salechanneltype as 销售渠道类型,
+        b.businessscope as 业务范围,
+        b.practicearea as 执业区域
+        from laagent a, laagentinfo b, tmmanagecom c, latree d
+        where a.agentstate = '03'
+        and a.agentcode = b.agentcode
+        and a.managecom = c.managecom
+        and d.agentcode = a.agentcode
+        and nvl(b.postsign, '岗位标识空') &lt;> '虚拟账号'
+        and b.practiceoutdate is null
+        and trunc(a.outworkdate) &lt; trunc(sysdate-5)
+    </select>
+
+</mapper>

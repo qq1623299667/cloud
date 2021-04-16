@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmAssessPlanMapper">
+
+    <select id="selectNextAssessSureMonth" parameterType="java.lang.String" resultType="java.lang.String">
+        select to_char(add_months(to_date(#{assessSureMonth,jdbcType=VARCHAR},'YYYYMM'),1),'YYYYMM') from dual
+    </select>
+
+    <select id="insertplan" parameterType="java.util.Map"  statementType="CALLABLE">
+          <![CDATA[
+        {call pkg_tmassess_plan_actual.p_insertplan(
+                #{bakMonth, mode=IN, jdbcType=VARCHAR},
+                #{o_flag, mode=OUT, jdbcType=VARCHAR})}
+        ]]>
+    </select>
+
+</mapper>

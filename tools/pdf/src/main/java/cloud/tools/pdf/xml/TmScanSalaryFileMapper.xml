@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmScanSalaryFileMapper">
+
+    <select id="selectUploadPath" resultType="java.lang.String">
+        select codename
+        from ldcode
+        where codetype = 'UploadPath'
+        and code = 'TMSalary'
+    </select>
+
+    <select id="selectUploadPathB" resultType="java.lang.String">
+        select codename
+        from ldcode
+        where codetype = 'UploadPath'
+        and code = 'TMSalaryB'
+    </select>
+
+    <select id="selectMonth" resultType="java.lang.String">
+        select to_char(add_months(SYSDATE, -1), 'YYYYMM')
+        from dual
+    </select>
+
+    <select id="checkTmSalary" resultType="java.lang.Integer">
+        select count(1)
+        from tmsalary a
+        where a.month = #{month}
+        and a.DATASOURCE = 'TMSalary' || '${project}'
+        and rownum = 1
+    </select>
+
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="false">
+        INSERT ALL
+        <foreach collection="list" index="index" item="item">
+            INTO TMSALARY_TEMP(
+            <trim suffixOverrides=",">
+                <if test="item.batchsn != null and item.batchsn != ''">
+                    BATCHSN,
+                </if>
+                <if test="item.rowsn != null and item.rowsn != ''">
+                    ROWSN,
+                </if>
+                <if test="item.colsn != null and item.colsn != ''">
+                    COLSN,
+                </if>
+                <if test="item.month != null and item.month != ''">
+                    MONTH,
+                </if>
+                <if test="item.mergeflag != null and item.mergeflag != ''">
+                    MERGEFLAG,
+                </if>
+                <if test="item.paycategory != null and item.paycategory != ''">
+                    PAYCATEGORY,
+                </if>
+                <if test="item.department != null and item.department != ''">
+                    DEPARTMENT,
+                </if>
+                <if test="item.positiontype != null and item.positiontype != ''">
+                    POSITIONTYPE,
+                </if>
+                <if test="item.agentnum != null and item.agentnum != ''">
+                    AGENTNUM,
+                </if>
+                <if test="item.cnname != null and item.cnname != ''">
+                    CNNAME,
+                </if>
+                <if test="item.basesalary != null and item.basesalary != ''">
+                    BASESALARY,
+                </if>
+                <if test="item.subsidy != null and item.subsidy != ''">
+                    SUBSIDY,
+                </if>
+                <if test="item.monthlywages != null and item.monthlywages != ''">
+                    MONTHLYWAGES,
+                </if>
+                <if test="item.monthlysubsidy != null and item.monthlysubsidy != ''">
+                    MONTHLYSUBSIDY,
+                </if>
+                <if test="item.irbonus != null and item.irbonus != ''">
+                    IRBONUS,
+                </if>
+                <if test="item.overtimepay != null and item.overtimepay != ''">
+                    OVERTIMEPAY,
+                </if>
+                <if test="item.mpbonus != null and item.mpbonus != ''">
+                    MPBONUS,
+                </if>
+                <if test="item.lmpbonus != null and item.lmpbonus != ''">
+                    LMPBONUS,
+                </if>
+                <if test="item.otherbonus != null and item.otherbonus != ''">
+                    OTHERBONUS,
+                </if>
+                <if test="item.otheraddsum != null and item.otheraddsum != ''">
+                    OTHERADDSUM,
+                </if>
+                <if test="item.servicebonus != null and item.servicebonus != ''">
+                    SERVICEBONUS,
+                </if>
+                <if test="item.reofficebonus != null and item.reofficebonus != ''">
+                    REOFFICEBONUS,
+                </if>
+                <if test="item.yearotherbonus != null and item.yearotherbonus != ''">
+                    YEAROTHERBONUS,
+                </if>
+                <if test="item.festivalsubsidy != null and item.festivalsubsidy != ''">
+                    FESTIVALSUBSIDY,
+                </if>
+                <if test="item.hotsubsidy != null and item.hotsubsidy != ''">
+                    HOTSUBSIDY,
+                </if>
+                <if test="item.housesubsidy != null and item.housesubsidy != ''">
+                    HOUSESUBSIDY,
+                </if>
+                <if test="item.salesincentivesbonus != null and item.salesincentivesbonus != ''">
+                    SALESINCENTIVESBONUS,
+                </if>
+                <if test="item.pretaxaddsum != null and item.pretaxaddsum != ''">
+                    PRETAXADDSUM,
+                </if>
+                <if test="item.housingfund != null and item.housingfund != ''">
+                    HOUSINGFUND,
+                </if>
+                <if test="item.socialsecurity != null and item.socialsecurity != ''">
+                    SOCIALSECURITY,
+                </if>
+                <if test="item.otherdeductionsum != null and item.otherdeductionsum != ''">
+                    OTHERDEDUCTIONSUM,
+                </if>
+                <if test="item.sadeduction != null and item.sadeduction != ''">
+                    SADEDUCTION,
+                </if>
+                <if test="item.personaltax != null and item.personaltax != ''">
+                    PERSONALTAX,
+                </if>
+                <if test="item.annualbounstax != null and item.annualbounstax != ''">
+                    ANNUALBOUNSTAX,
+                </if>
+                <if test="item.pretaxdeductionsum != null and item.pretaxdeductionsum != ''">
+                    PRETAXDEDUCTIONSUM,
+                </if>
+                <if test="item.pretaxadd != null and item.pretaxadd != ''">
+                    PRETAXADD,
+                </if>
+                <if test="item.aftertaxdeduction != null and item.aftertaxdeduction != ''">
+                    AFTERTAXDEDUCTION,
+                </if>
+                <if test="item.realwages != null and item.realwages != ''">
+                    REALWAGES,
+                </if>
+                <if test="item.datasource != null and item.datasource != ''">
+                    DATASOURCE,
+                </if>
+            </trim>
+            ) VALUES (
+            <trim suffixOverrides=",">
+                <if test="item.batchsn != null and item.batchsn != ''">
+                    #{item.batchsn,jdbcType=VARCHAR},
+                </if>
+                <if test="item.rowsn != null and item.rowsn != ''">
+                    #{item.rowsn,jdbcType=VARCHAR},
+                </if>
+                <if test="item.colsn != null and item.colsn != ''">
+                    #{item.colsn,jdbcType=VARCHAR},
+                </if>
+                <if test="item.month != null and item.month != ''">
+                    #{item.month,jdbcType=VARCHAR},
+                </if>
+                <if test="item.mergeflag != null and item.mergeflag != ''">
+                    #{item.mergeflag,jdbcType=VARCHAR},
+                </if>
+                <if test="item.paycategory != null and item.paycategory != ''">
+                    #{item.paycategory,jdbcType=VARCHAR},
+                </if>
+                <if test="item.department != null and item.department != ''">
+                    #{item.department,jdbcType=VARCHAR},
+                </if>
+                <if test="item.positiontype != null and item.positiontype != ''">
+                    #{item.positiontype,jdbcType=VARCHAR},
+                </if>
+                <if test="item.agentnum != null and item.agentnum != ''">
+                    #{item.agentnum,jdbcType=VARCHAR},
+                </if>
+                <if test="item.cnname != null and item.cnname != ''">
+                    #{item.cnname,jdbcType=VARCHAR},
+                </if>
+                <if test="item.basesalary != null and item.basesalary != ''">
+                    #{item.basesalary,jdbcType=VARCHAR},
+                </if>
+                <if test="item.subsidy != null and item.subsidy != ''">
+                    #{item.subsidy,jdbcType=VARCHAR},
+                </if>
+                <if test="item.monthlywages != null and item.monthlywages != ''">
+                    #{item.monthlywages,jdbcType=VARCHAR},
+                </if>
+                <if test="item.monthlysubsidy != null and item.monthlysubsidy != ''">
+                    #{item.monthlysubsidy,jdbcType=VARCHAR},
+                </if>
+                <if test="item.irbonus != null and item.irbonus != ''">
+                    #{item.irbonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.overtimepay != null and item.overtimepay != ''">
+                    #{item.overtimepay,jdbcType=VARCHAR},
+                </if>
+                <if test="item.mpbonus != null and item.mpbonus != ''">
+                    #{item.mpbonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.lmpbonus != null and item.lmpbonus != ''">
+                    #{item.lmpbonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.otherbonus != null and item.otherbonus != ''">
+                    #{item.otherbonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.otheraddsum != null and item.otheraddsum != ''">
+                    #{item.otheraddsum,jdbcType=VARCHAR},
+                </if>
+                <if test="item.servicebonus != null and item.servicebonus != ''">
+                    #{item.servicebonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.reofficebonus != null and item.reofficebonus != ''">
+                    #{item.reofficebonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.yearotherbonus != null and item.yearotherbonus != ''">
+                    #{item.yearotherbonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.festivalsubsidy != null and item.festivalsubsidy != ''">
+                    #{item.festivalsubsidy,jdbcType=VARCHAR},
+                </if>
+                <if test="item.hotsubsidy != null and item.hotsubsidy != ''">
+                    #{item.hotsubsidy,jdbcType=VARCHAR},
+                </if>
+                <if test="item.housesubsidy != null and item.housesubsidy != ''">
+                    #{item.housesubsidy,jdbcType=VARCHAR},
+                </if>
+                <if test="item.salesincentivesbonus != null and item.salesincentivesbonus != ''">
+                    #{item.salesincentivesbonus,jdbcType=VARCHAR},
+                </if>
+                <if test="item.pretaxaddsum != null and item.pretaxaddsum != ''">
+                    #{item.pretaxaddsum,jdbcType=VARCHAR},
+                </if>
+                <if test="item.housingfund != null and item.housingfund != ''">
+                    #{item.housingfund,jdbcType=VARCHAR},
+                </if>
+                <if test="item.socialsecurity != null and item.socialsecurity != ''">
+                    #{item.socialsecurity,jdbcType=VARCHAR},
+                </if>
+                <if test="item.otherdeductionsum != null and item.otherdeductionsum != ''">
+                    #{item.otherdeductionsum,jdbcType=VARCHAR},
+                </if>
+                <if test="item.sadeduction != null and item.sadeduction != ''">
+                    #{item.sadeduction,jdbcType=VARCHAR},
+                </if>
+                <if test="item.personaltax != null and item.personaltax != ''">
+                    #{item.personaltax,jdbcType=VARCHAR},
+                </if>
+                <if test="item.annualbounstax != null and item.annualbounstax != ''">
+                    #{item.annualbounstax,jdbcType=VARCHAR},
+                </if>
+                <if test="item.pretaxdeductionsum != null and item.pretaxdeductionsum != ''">
+                    #{item.pretaxdeductionsum,jdbcType=VARCHAR},
+                </if>
+                <if test="item.pretaxadd != null and item.pretaxadd != ''">
+                    #{item.pretaxadd,jdbcType=VARCHAR},
+                </if>
+                <if test="item.aftertaxdeduction != null and item.aftertaxdeduction != ''">
+                    #{item.aftertaxdeduction,jdbcType=VARCHAR},
+                </if>
+                <if test="item.realwages != null and item.realwages != ''">
+                    #{item.realwages,jdbcType=VARCHAR},
+                </if>
+                <if test="item.datasource != null and item.datasource != ''">
+                    #{item.datasource,jdbcType=VARCHAR},
+                </if>
+            </trim>
+            )
+        </foreach>
+        SELECT 1 FROM DUAL
+    </insert>
+
+    <update id="updateDataSource">
+        update TMSALARY_TEMP a
+        set a.datasource = #{type}
+        where a.batchsn = #{batchNo}
+    </update>
+
+    <select id="callCheckTmSalary" parameterType="java.util.Map" statementType="CALLABLE"
+            useCache="false">
+        <![CDATA[
+            {call TMSALARYIMPORT.TMSALARY_CHECK(
+                #{batchNo, mode=IN, jdbcType=VARCHAR},
+                #{month, mode=IN, jdbcType=VARCHAR}
+            )}
+        ]]>
+    </select>
+
+    <select id="callInsertTmSalary" parameterType="java.util.Map" statementType="CALLABLE"
+            useCache="false">
+        <![CDATA[
+            {call TMSALARYIMPORT.TMSALARY_INSERT(
+                #{batchNo, mode=IN, jdbcType=VARCHAR}
+            )}
+        ]]>
+    </select>
+
+    <select id="countExcelErr" resultType="java.lang.Integer">
+        select count(1)
+        from TMIMPORTLOG a
+        where a.BATCHNUM = #{batchNo}
+        order by a.rowno, a.colno
+    </select>
+
+    <select id="selectExcelErrList" resultType="java.util.Map">
+        select
+        a.ROWNO,
+        a.COLNO,
+        a.MESSAGE
+        from TMIMPORTLOG a
+        where a.BATCHNUM = #{batchNo}
+        order by a.rowno, a.colno
+    </select>
+
+</mapper>

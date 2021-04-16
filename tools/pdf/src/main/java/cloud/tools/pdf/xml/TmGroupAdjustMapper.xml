@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmGroupAdjustMapper">
+
+    <insert id="insertGroupAdjust">
+        insert into tmcontnogroupadjust (
+        CONTNOGROUPADJUSTSN,
+        CONTNO,
+        TMSAGENTNUM,
+        CCMAGENTNUM,
+        CREATOR,
+        OPERATOR,
+        MAKEDATE,
+        MAKETIME,
+        MODIFYDATE,
+        MODIFYTIME
+        )
+        select
+        to_char(createmaxno('TMCOMRULE', 'SN'), 'FM0000000000'),
+        a.contno as contno,
+        (
+        select
+        (
+        select la.agentnum
+        from laagent la
+        where la.agentnum = cw.oldtmrcode
+        )
+        from tmagentchangetrace cw
+        where cw.agentcode = a.tmrcode
+        and not exists (
+        select 1
+        from tmagentchangetrace cw1
+        where cw1.agentcode = cw.agentcode
+        and cw1.serialno &lt; cw.serialno
+        )
+        ) as tmsnum,
+        (
+        select
+        (
+        select la.agentnum
+        from laagent la
+        where la.agentnum = cw.oldccmcode
+        )
+        from tmagentchangetrace cw
+        where cw.agentcode = a.tmrcode
+        and not exists (
+        select 1
+        from tmagentchangetrace cw1
+        where cw1.agentcode = cw.agentcode
+        and cw1.serialno &lt; cw.serialno
+        )
+        ) as ccmnum,
+        '批处理归属调整',
+        '批处理归属调整',
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime
+        from tmcommission a, tmlccont b, tmagentchangetrace c
+        where a.contno = b.contno
+        and (
+        a.commissionmonth > (
+        select ld.codealias
+        from ldcode ld
+        where ld.codetype = 'tmmonth'
+        and ld.code = 'maxfreeze'
+        )
+        )
+        and a.tmrcode = c.agentcode
+        and a.paytype ='ZC'
+        and c.wageflag = 'Y'
+        and a.cvalidate &lt; c.changedate
+        and not exists (
+        select 1
+        from tmagentchangetrace c1
+        where c.agentcode = c1.agentcode
+        and c1.wageflag = 'Y'
+        and c1.Changedate &lt; c.Changedate
+        )
+        and not exists (select 1 from tmcontnogroupadjust d where a.contno = d.contno)
+        group by a.contno, a.tmrcode
+    </insert>
+
+    <update id="updateTmLcCont">
+        update tmlccont a
+        set (
+        a.tmscode,
+        a.ccmcode
+        )
+        =
+        (
+        select
+        (
+        select la.agentcode
+        from laagent la
+        where la.agentnum = b.tmsagentnum
+        ),
+        (
+        select la.agentcode
+        from laagent la
+        where la.agentnum = b.ccmagentnum
+        )
+        from tmcontnogroupadjust b
+        where a.contno = b.contno
+        ),
+        a.operator = '批处理归属调整',
+        a.modifydate = basic.CurrentDate,
+        a.modifytime = basic.CurrentTime
+        where exists (
+        select *
+        from tmcontnogroupadjust c
+        where c.contno = a.contno
+        and c.operator = '批处理归属调整'
+        and c.makedate = basic.CurrentDate
+        )
+    </update>
+
+    <update id="updateTmCom">
+        update tmcommission a
+        set (
+        a.tmscode,
+        a.ccmcode
+        )
+        =
+        (
+        select
+        (
+        select la.agentcode
+        from laagent la
+        where la.agentnum = b.tmsagentnum
+        ),
+        (
+        select la.agentcode
+        from laagent la
+        where la.agentnum = b.ccmagentnum
+        )
+        from tmcontnogroupadjust b
+        where a.contno = b.contno
+        ),
+        a.operator = '批处理归属调整',
+        a.modifydate = basic.CurrentDate,
+        a.modifytime = basic.CurrentTime
+        where exists (
+        select *
+        from tmcontnogroupadjust c
+        where c.contno = a.contno
+        and c.operator = '批处理归属调整'
+        and c.makedate = basic.CurrentDate
+        )
+        and a.commissionmonth > (
+        select ld.codealias
+        from ldcode ld
+        where ld.codetype = 'tmmonth'
+        and ld.code = 'maxfreeze'
+        )
+        and not exists (
+        select *
+        from tmcommission d
+        where a.bak2 = d.commissionsn
+        and d.commissionmonth &lt;= (
+        select ld.codealias
+        from ldcode ld
+        where ld.codetype = 'tmmonth'
+        and ld.code = 'maxfreeze'
+        )
+        )
+    </update>
+
+</mapper>

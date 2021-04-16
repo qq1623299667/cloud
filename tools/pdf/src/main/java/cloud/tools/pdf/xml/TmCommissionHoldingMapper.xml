@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmCommissionHoldingMapper">
+
+    <select id="selectMonth" resultType="java.lang.String">
+        select to_char(add_months(to_date(a.codealias, 'YYYYMM'), 1), 'YYYYMM')
+        from ldcode a
+        where a.codetype = 'tmmonth'
+        and a.code = 'wagepresuremonth'
+    </select>
+
+    <delete id="deleteTmCommissionHolding">
+        delete from TMCOMMISSIONHOLDING a
+        where a.commissionmonth = #{month}
+    </delete>
+
+    <update id="mergeTmCommissionHolding">
+        merge into tmcommissionholding a
+        using (
+
+        select
+        v.payrollmonth,
+        v.reportscity,
+        v.branchtype,
+        v.managecom,
+        v.product,
+        v.CRITERION,
+        v.post,
+        sum(v.amep) as amep
+        from
+        (
+        select b.payrollmonth,
+        c.reportscity,
+        (
+        select e.codename
+        from ldcode e
+        where g.channel = e.code
+        and e.codetype = 'channel2'
+        ) as branchtype,
+        b.managecom,
+        '0' as product,
+        i.gaap as CRITERION,
+        decode(g.agentgrade, 'ACCM', 'TMS', 'ACCM(P)', 'TMS', g.gradelevel) as post,
+        sum(b.payment) as amep
+        from tmwagetotal b, tmmanagecom c, laagentgrade f, tmsalaryagentc g, agentunicode h, tmwagepreconfig i
+        where b.MANAGECOM = c.MANAGECOM
+        and b.WAGENO = g.BAKMONTH
+        and b.agentgrade = f.gradecode
+        and c.comgrade = '03'
+        and b.agentcode = g.agentcode
+        and g.agentnum = h.agentnum(+)
+        and b.managecom = i.managecom
+        and c.managecom in (select t.managecom from tmwagepreconfig t where t.managecom = c.managecom)
+        and c.oaflag = '1'
+        and b.payrollmonth = #{month}
+        group by
+        b.payrollmonth,
+        b.managecom,
+        f.noti,
+        c.reportscity,
+        c.branchtype,
+        g.channel,
+        g.agentgrade,
+        g.gradelevel,
+        i.gaap
+        ) v
+        group by
+        v.post,
+        v.payrollmonth,
+        v.reportscity,
+        v.branchtype,
+        v.managecom,
+        v.product,
+        v.CRITERION
+
+        ) t on (a.COMMISSIONMONTH = t.payrollmonth
+        and a.MANAGECOM = t.MANAGECOM
+        and a.post = t.post
+        and a.branchtype = t.branchtype)
+        when matched then
+        update set
+        a.city = t.reportscity,
+        a.product = t.product,
+        a.amep = t.amep,
+        a.criterion = t.CRITERION,
+        a.modifydate = basic.CurrentDate,
+        a.modifytime = basic.CurrentTime
+        when not matched then
+        insert (
+        a.COMMISSIONMONTH,
+        a.CITY,
+        a.branchtype,
+        a.managecom,
+        a.product,
+        a.criterion,
+        a.post,
+        a.amep,
+        a.operator,
+        a.makedate,
+        a.maketime,
+        a.modifydate,
+        a.modifytime
+        )
+        values
+        (
+        t.payrollmonth,
+        t.reportscity,
+        t.branchtype,
+        t.managecom,
+        t.product,
+        t.criterion,
+        t.post,
+        t.amep,
+        'admin',
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime
+        )
+    </update>
+
+    <update id="mergeTmCommissionEmp">
+        merge into TMCOMMISSIONEMP tt
+        using (
+
+        select
+        COMMISSIONMONTH
+        ,RISKCODE
+        ,RISKNAME
+        ,ORACODE
+        ,CONTPLANNAME
+        ,POST
+        ,BRANCHTYPE
+        ,MANAGECOM
+        ,REPORTSCITY
+        ,ISJUMPPOINT
+        ,sum(AMEP) as AMEP
+        ,sum(CALMONEY) as CALMONEY
+        from
+        (
+        select a.commissionmonth,
+        a.riskcode,
+        e.riskname,
+        (
+        select w2.OraCode
+        from FIProductMap_ICIS@dblk_icisdr_to_ccms w2
+        where w2.ProductKey = (
+        select w3.ProductKey
+        from TMLCPol w3
+        where w3.ContNo = a.ContNo
+        and w3.riskcode = a.riskcode
+        and w3.AppFlag not in ('9', 'c')
+        and w3.ProductKey is not null
+        and w3.ReNewCount = (
+        select max(w4.ReNewCount)
+        from TMLCPol w4
+        where w4.ContNo = w3.ContNo
+        and w4.riskcode = a.riskcode
+        and w4.AppFlag not in ('9', 'c')
+        and w4.ProductKey is not null
+        )
+        and RowNum = 1
+        )
+        ) as oracode,
+        d.contplanname,
+        c.post,
+        b.branchtype,
+        b.shortname as MANAGECOM,
+        b.reportscity,
+        a.isjumppoint,
+        (case
+        when c.post = 'TMR' then round(sum(a.tmramep), 2)
+        when c.post = 'TMS' then round(sum(a.tmsamep), 2)
+        when c.post = 'CCM' then round(sum(a.ccmamep), 2)
+        end) as amep,
+        sum(a.calmoney) as calmoney
+        from tmcommission a, tmmanagecom b, TMContPlanCode d, lmriskapp_icis e, (
+        select 'TMR' as post from dual
+        union all
+        select 'TMS' from dual
+        union all select 'CCM' from dual
+        ) c
+        where b.comgrade = '03'
+        and d.contplancode = a.contplancode
+        and a.riskcode = e.riskcode
+        and a.managecom = b.managecom
+        and b.oaflag = '1'
+        and a.isjumppoint = 'Y'
+        and a.ISWAGE = 'Y'
+        and a.commissionmonth = #{month}
+        group by
+        a.commissionmonth,
+        c.post,
+        a.contno,
+        a.managecom,
+        a.riskcode,
+        b.branchtype,
+        d.contplanname,
+        b.shortname,
+        b.reportscity,
+        e.riskname,
+        a.isjumppoint
+        ) t
+        group by
+        t.COMMISSIONMONTH
+        ,t.RISKCODE
+        ,t.ORACODE
+        ,t.CONTPLANNAME
+        ,t.POST
+        ,t.BRANCHTYPE
+        ,t.MANAGECOM
+        ,t.REPORTSCITY
+        ,t.RISKNAME
+        ,t.ISJUMPPOINT
+
+        ) h on (tt.COMMISSIONMONTH = h.commissionmonth
+        and tt.MANAGECOM = h.MANAGECOM
+        and tt.post = h.post
+        and tt.oracode = h.oracode
+        and tt.contplanname = h.contplanname)
+        when matched then
+        update set
+        tt.riskcode = h.riskcode,
+        tt.riskname = h.riskname,
+        tt.reportscity = h.reportscity,
+        tt.branchtype = h.branchtype,
+        tt.isjumppoint = h.isjumppoint,
+        tt.amep = h.amep,
+        tt.calmoney = h.calmoney,
+        tt.modifydate = basic.CurrentDate,
+        tt.modifytime = basic.CurrentTime
+        when not matched then
+        insert (
+        tt.commissionmonth,
+        tt.riskcode,
+        tt.riskname,
+        tt.oracode,
+        tt.contplanname,
+        tt.post,
+        tt.branchtype,
+        tt.managecom,
+        tt.reportscity,
+        tt.isjumppoint,
+        tt.amep,
+        tt.calmoney,
+        tt.operator,
+        tt.makedate,
+        tt.maketime,
+        tt.modifydate,
+        tt.modifytime
+        )
+        values
+        (
+        h.commissionmonth,
+        h.riskcode,
+        h.riskname,
+        h.oracode,
+        h.contplanname,
+        h.post,
+        h.branchtype,
+        h.managecom,
+        h.reportscity,
+        h.isjumppoint,
+        h.amep,
+        h.calmoney,
+        'admin',
+        basic.CurrentDate,
+        basic.CurrentTime,
+        basic.CurrentDate,
+        basic.CurrentTime
+        )
+    </update>
+
+</mapper>

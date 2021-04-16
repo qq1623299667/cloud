@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmPolicySupervisionMapper">
+
+    <delete id="deleteJgBdYj">
+        delete from JG_BDYJ t
+        where t.salechnl = '02'
+        and t.updateable = 'Y'
+        and t.submitdate = to_date(#{submitDate, jdbcType=VARCHAR}, 'yyyy-mm-dd')
+        and t.datamonth = #{dataMonth, jdbcType=VARCHAR}
+        and t.yjsxflx = '02'
+        and t.yjsxflx = '02'
+    </delete>
+
+    <insert id="insertJgBdYj">
+        insert into JG_BDYJ (
+        ttbdh,
+        ttbdxzhm,
+        grbdh,
+        gdbxxzhm,
+        bdtgxz,
+        cpbm,
+        ywlx,
+        fyxh,
+        hbdm,
+        yjsxfbl,
+        yjsxfje,
+        cwqrrq,
+        sjdzrq,
+        khyxmc,
+        yxzh,
+        yxzhmc,
+        salechnl,
+        datasource,
+        updateable,
+        submitdate,
+        xsrygh,
+        managecom,
+        datamonth,
+        yjsxflx,
+        makeoperator,
+        makedate,
+        maketime,
+        modifyoperator,
+        modifydate,
+        modifytime
+        )
+        <!--      团体保单号  -->
+        SELECT '' as TTBDH,
+        <!--        团体保单险种号码-->
+        '' as TTBDXZHM,
+        <!--        个人保单号-->
+        a.contno as GRBDH,
+        <!--        个单保险险种号码-->
+        d.polno as GDBXXZHM,
+        <!--        个人/团险-->
+        '01' as BDTGXZ,
+        f.riskcode as CPBM,
+        <!--        业务类型-->
+        (case
+        when b.state = '4' and b.statereason = '06' and b.type = 'Refund' then '5'
+        when b.state = '4' and b.statereason &lt;&gt; '06' and b.type = 'Refund' then '3'
+        when b.state = '1' and b.type = 'Billing' and b.paycount = 1 then '1'
+        when b.type = 'Billing' and b.paycount >= 2 then '2'
+        else '9'
+        end) as YWLX,
+        <!--        tip:费用序号，佣金和手续费的费用序列号可能会重复，故添加C用以区分-->
+        'C' || d.polchargesn as FYXH,
+        'CNY' as HBDM,
+        decode(d.calbasemoney,
+        0.00,
+        round(abs(d.polcharge / f.prem), 2),
+        round(abs(d.polcharge / d.calbasemoney), 2)) as YJSXFBL,
+        d.polcharge as YJSXFJE,
+        <!--        财务确认日-->
+        t.paydate as CWQRRQ,
+        <!--        实际到账日-->
+        t.epaydate as SJDZRQ,
+        <!--        扣费银行-->
+        tm.OPPBANKLOCATION as KHYXMC,
+        tm.oppact as YXZH,
+        tm.OPPACTNAME as YXZHMC,
+        '02' as salechnl,
+        'tmcontcharge' as datasource,
+        'Y' as updateable,
+        to_date(#{submitDate, jdbcType = VARCHAR}, 'yyyy-mm-dd') as submitdate,
+        null as xsrygh,
+        null as managecom,
+        #{dataMonth,jdbcType = VARCHAR} as datamonth,
+        '02' as yjsxflx,
+        'batch' as makeoperator,
+        Basic.CurrentDate as makedate,
+        Basic.CurrentTime as maketime,
+        'batch' as modifyoperator,
+        Basic.CurrentDate as modifydate,
+        Basic.CurrentTime as modifytime
+        FROM tmcontcharge a,
+        tmcontpay b,
+        sponsorcodeext c,
+        tmpolcharge d,
+        tmlcpol f,
+        tmcontchargepay t,
+        tmpaymentaccount tm
+        where a.contpaysn = b.contpaysn
+        and a.sponsorcode = c.sponsorcode
+        and a.contchargesn = d.contchargesn
+        and a.contpaysn = d.contpaysn
+        and d.contno = f.contno
+        and a.chargepaysn = t.chargepaysn(+)
+        <!--        完成支付的状态-->
+        and t.state = '31'
+        and t.settlementsponsor = tm.settlementsponsor
+        and d.polno = f.polno
+        and a.chargetype = '1'
+        and c.channeltype != '01'
+        and d.polcharge &lt;&gt; 0
+        and to_char(t.epaydate, 'yyyymm') = #{dataMonth, jdbcType = VARCHAR}
+        and not exists (
+        select 1
+        from JG_BDYJ tb
+        where tb.salechnl = '02'
+        and tb.yjsxflx = '02'
+        and tb.fyxh = 'C' || d.polchargesn
+        and tb.submitdate = to_date(#{submitDate, jdbcType = VARCHAR}, 'yyyy-mm-dd')
+        )
+    </insert>
+
+</mapper>

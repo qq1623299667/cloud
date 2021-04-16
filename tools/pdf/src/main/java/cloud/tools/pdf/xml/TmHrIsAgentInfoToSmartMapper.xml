@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cignacmb.smart.job.mapper.tm.TmHrIsAgentInfoToSmartMapper">
+
+    <delete id="deleteReadAgentInfoHrIs">
+        delete from read_agentinfo_hris
+        where batchnum &lt; to_char(sysdate-30, 'YYYYMMDD')
+    </delete>
+
+    <insert id="insertReadAgentInfoHrIs">
+        insert into read_agentinfo_hris
+        select to_char(sysdate,'YYYYMMDD')
+        ,ACTION_DESCR
+        ,REASON_DESCR
+        ,C_REHIR
+        ,C_SPECI_REASON
+        ,LEAVE_DT
+        ,HRS_STATUS
+        ,GP_PAYGROUP
+        ,EMPLID
+        ,EMPLNAME
+        ,NAME_AC
+        ,C_ATHRZTN_CD
+        ,LOCATION_DESCR
+        ,ADDRESS1
+        ,ESTAB_DESCR
+        ,CITY
+        ,DESCR
+        ,C_SUB_FUNCTION
+        ,C_JOB_RANK
+        ,JOBCODE_DESCR
+        ,SERVICE_DT
+        ,DEPTNAME
+        ,DEPT_DESCR
+        ,DESCR_DEPT
+        ,DEPT_ENG_NAME
+        ,DESCR100_10
+        ,DESCR100_11
+        ,DESCR100
+        ,DESCR254
+        ,PHONE
+        ,NATIONAL_ID
+        ,ADDRESS1_2
+        ,ACCOUNT_EC_ID
+        ,C_INS_CITY
+        ,GPAU_PAYMENTTYPE
+        ,CONTRIB_AREA_CHN
+        ,HUKOU_TYPE_CHN
+        ,SUPERVISOR_ID
+        ,SUPERVISOR_NAME
+        ,DATE1
+        ,CONTNAME
+        ,FT_SEX
+        ,BIRTHDATE
+        ,AGE
+        ,DES_MAR_STA_BRA
+        ,COUNTRY_DESCR2
+        ,GPCN_RACE_ETHNIC
+        ,DESCR30
+        ,PHONE1
+        ,EMAIL_ADDR
+        ,EMAIL_ADDR2
+        ,CONTACT_NAME
+        ,CONTACTPHONENBR
+        ,PHONE2
+        ,C_ONLY_CHILD
+        ,NAME1
+        ,DESCR1_FRA
+        ,CHILDREN_BIRTHDAY
+        ,AGE1
+        ,NAME2
+        ,DESCR2_FRA
+        ,C_BIRTHDATE
+        ,AGE2
+        ,NAME3
+        ,DESCR3_FRA
+        ,BIRTH_DT
+        ,AGE_YEARS
+        ,DES_EDU_LVL_BRA
+        ,DEGREE_CHN
+        ,SCHOOL_DESCR
+        ,MAJOR_NAME
+        ,END_DT
+        ,START_DT_CHN
+        ,DATE_POSTED
+        ,DATE_ATTAINED
+        ,DATE_PROCESSED
+        ,MV_MODEL
+        ,ADDR_LKUP_L2_1
+        ,ADDR_LKUP_L2_2
+        ,DESCR1_GER
+        ,C_JOB_TITLE
+        ,C_PROFSNAL_SKILL
+        ,EMPLOYER
+        ,C_INDUSTRY_YEAR
+        ,PROBATION_DT
+        ,CONTRCT_EXP_END_DT
+        ,C_WECHAT_ID
+        ,C_QQ_ID
+        ,DESCR100_2
+        ,DESCR100_3
+        ,OTH_INSURANCE_NAME
+        ,C_HR_COST
+        ,C_HANDICAPS
+        ,DESCR2_GER
+        ,FLAG
+        from PS_C_HRIS_SMRT_VW
+    </insert>
+
+    <select id="checkMaxBatchNum" resultType="java.lang.String">
+        select 1 from dual
+        where (select max(a.batchnum) from read_agentinfo_hris a) = to_char(sysdate, 'YYYYMMDD')
+    </select>
+
+    <delete id="deleteAgentInfoHrIs">
+        delete from agentinfo_hris
+    </delete>
+
+    <insert id="insertAgentInfoHrIs">
+        insert into agentinfo_hris
+        (
+        dimissiontype,
+        dimissionreason,
+        againemploy,
+        dimissionremark,
+        dimissiondate,
+        agentstate,
+        paycategory,
+        agentnum,
+        name,
+        enname,
+        establishmentcode,
+        workplace,
+        workplaceadress,
+        affiliation,
+        workplacecity,
+        costcenter,
+        secfunctiongroup,
+        title,
+        agentgrade,
+        employdate,
+        fircndepartment,
+        seccndepartment,
+        cngroup,
+        firendepartment,
+        secendepartment,
+        engroup,
+        cnposition,
+        enposition,
+        mobile,
+        idno,
+        bank,
+        cardnum,
+        socialsecuritypaycity,
+        socialsecuritypayaccount,
+        rgtaddress,
+        householdtype,
+        branchname,
+        upmanagername,
+        companystartdate,
+        contracttype,
+        sex,
+        birthday,
+        age,
+        marriage,
+        country,
+        nationality,
+        polityvisage,
+        companyphone,
+        firmmail,
+        email,
+        emergencycontactname,
+        emergencycontactphone,
+        phone,
+        onlychildcard,
+        child1name,
+        child1sex,
+        child1birthday,
+        age1,
+        child2name,
+        child2sex,
+        child2birthday,
+        age2,
+        child3name,
+        child3sex,
+        child3birthday,
+        age3,
+        degree,
+        highestdegree,
+        graduateschool,
+        speciality,
+        graduationdate,
+        firstjobdate,
+        jointhepartydate,
+        isformalpartymemberdate,
+        leavepartydate,
+        liveway,
+        idcardaddress,
+        homeaddress,
+        englishlevel,
+        posttitle,
+        skilllevel,
+        oldcom,
+        application3,
+        probationenddate,
+        contractenddate,
+        wechat,
+        qq,
+        postcnname,
+        postenname,
+        insuranceplan,
+        hrcost,
+        disabled,
+        sponsor,
+        warmsubsy
+        )
+        select distinct DIMISSIONTYPE,
+        DIMISSIONREASON,
+        AGAINEMPLOY,
+        dimissionRemark,
+        DIMISSIONDATE,
+        AGENTSTATE,
+        PayCategory,
+        AGENTNUM,
+        NAME,
+        EnName,
+        establishmentCode,
+        Workplace,
+        WorkplaceAdress,
+        Affiliation,
+        WorkplaceCity,
+        CostCenter,
+        SecFunctionGroup,
+        Title,
+        agentgrade,
+        EMPLOYDATE,
+        FirCnDepartment,
+        SecCnDepartment,
+        CnGroup,
+        FirEnDepartment,
+        SecEnDepartment,
+        EnGroup,
+        CnPosition,
+        EnPosition,
+        MOBILE,
+        idno,
+        Bank,
+        cardNum,
+        SocialSecurityPayCity,
+        SocialSecurityPayAccount,
+        rgtaddress,
+        Householdtype,
+        branchname,
+        UpManagerNAME,
+        companyStartDate,
+        contracttype,
+        sex,
+        birthday,
+        age,
+        marriage,
+        Country,
+        nationality,
+        polityvisage,
+        companyPhone,
+        firmMail,
+        email,
+        emergencyContactName,
+        emergencyContactPhone,
+        phone,
+        OnlyChildCard,
+        Child1name,
+        Child1Sex,
+        Child1Birthday,
+        age1,
+        Child2name,
+        Child2Sex,
+        Child2Birthday,
+        age2,
+        Child3name,
+        Child3Sex,
+        Child3Birthday,
+        age3,
+        degree,
+        HighestDegree,
+        graduateschool,
+        speciality,
+        graduationDate,
+        firstJobDate,
+        joinThePartyDate,
+        isFormalPartyMemberDate,
+        leavePartyDate,
+        liveWay,
+        IDCardAddress,
+        homeaddress,
+        EnglishLevel,
+        posttitle,
+        skillLevel,
+        oldcom,
+        application3,
+        ProbationEndDate,
+        contractEndDate,
+        weChat,
+        QQ,
+        postCnName,
+        postEnName,
+        InsurancePlan,
+        HRCost,
+        Disabled,
+        sponsor,
+        WARMSUBSY
+        from read_agentinfo_hris
+        where batchnum = to_char(sysdate, 'YYYYMMDD')
+    </insert>
+
+    <delete id="deleteLdCodeByHrIsPayCategoryType">
+        delete from ldcode a
+        where a.codetype = 'hris_paycategorytype'
+    </delete>
+
+    <insert id="insertLdCodeByHrIsPayCategoryType">
+        INSERT into ldcode(codetype, code, CODENAME)
+        select
+        'hris_paycategorytype' as codetype,
+        b.GP_PAYGROUP as code,
+        b.DESCR as CODENAME
+        from PS_C_GP_PAYGROUP_V b
+    </insert>
+
+    <delete id="deleteLdCodeByContractType">
+        delete from ldcode a
+        where a.codetype = 'contracttype'
+    </delete>
+
+    <insert id="insertLdCodeByContractType">
+        INSERT into ldcode(codetype, code, CODENAME)
+        select
+        'contracttype' as codetype,
+        b.CNT_TEMPLATE_ID as code,
+        b.DESCR as CODENAME
+        from PS_CNT_TEMPL_VW b
+    </insert>
+
+    <select id="checkSponsor" resultType="java.lang.String">
+        select distinct a.sponsor
+        from agentinfo_hris a
+        where trim(a.sponsor) is not null
+        and a.agentstate = '在职'
+        and exists (
+        select 1
+        from tmmanagecom b
+        where b.branchtype = '1'
+        and b.comgrade = '03'
+        and b.oaflag = '0'
+        and b.shortname = a.sponsor
+        )
+    </select>
+
+    <select id="checkFirCnDepartment" resultType="java.lang.String">
+        select distinct a.fircndepartment
+        from agentinfo_hris a
+        where trim(a.sponsor) is null
+        and a.agentstate = '在职'
+        and exists (
+        select 1 from hrmancom b
+        where b.comgrade = '03'
+        and b.oaflag = '0'
+        and b.name = a.fircndepartment
+        )
+    </select>
+
+    <select id="checkAgentNum" resultType="java.lang.String">
+        select a.agentnum
+        from laagent a
+        where a.agentstate = '01'
+        and a.branchtype = '1'
+        and exists (
+        select 1
+        from agentinfo_hris c
+        where c.agentnum = a.agentnum
+        and c.agentstate = '在职'
+        )
+        and not exists (
+        select 1
+        from laagentgrade ag, latree c
+        where c.agentcode = a.agentcode
+        and ag.gradecode = c.agentgrade
+        and ag.noti = 'CCM'
+        )
+        and not exists (
+        SELECT 1
+        FROM laagentinfo d
+        where a.agentcode = d.agentcode
+        and d.postsign like '%虚拟%'
+        )
+    </select>
+
+</mapper>
