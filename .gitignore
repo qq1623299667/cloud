@@ -1,5 +1,6 @@
 **/.mvn/
 *.iml
+.idea/
 HELP.md
 mvnw
 mvnw.cmd

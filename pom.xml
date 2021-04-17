@@ -21,6 +21,7 @@
     </parent>
 
     <modules>
+        <module>apollo</module>
         <module>dubbo</module>
         <module>dubbo-simple</module>
         <module>mysql-proxy</module>
@@ -38,6 +39,7 @@
         <module>tools</module>
         <module>thrift</module>
         <module>drools</module>
+        <module>xxjob</module>
     </modules>
 
     <properties>
