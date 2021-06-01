@@ -1,4 +1,5 @@
 **/.mvn/
+**/target/
 *.iml
 .idea/
 HELP.md
